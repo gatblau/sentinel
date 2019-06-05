@@ -32,11 +32,11 @@ type Watcher struct {
 	resourceType string
 	queue        workqueue.RateLimitingInterface
 	informer     cache.SharedIndexInformer
-	config       Config
+	publisher    Publisher
 }
 
 // creates a new controller to watch for changes in status of a specific resource
-func newWatcher(informer cache.SharedIndexInformer, resourceType string, config Config) *Watcher {
+func newWatcher(informer cache.SharedIndexInformer, resourceType string, publisher Publisher) *Watcher {
 	logrus.Info(fmt.Sprintf("sentinel-%s", resourceType))
 	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
 	var event Event
@@ -79,7 +79,7 @@ func newWatcher(informer cache.SharedIndexInformer, resourceType string, config 
 		resourceType: resourceType,
 		informer:     informer,
 		queue:        queue,
-		config:       config,
+		publisher:    publisher,
 	}
 }
 
@@ -156,17 +156,12 @@ func (w *Watcher) handleEvent(newEvent Event) error {
 	if !exists {
 		logrus.Infof("'%w' with key '%w' does not exist anymore\n", newEvent.resourceType, newEvent.key)
 	} else {
-		// Note that you also have to check the uid if you have a local controlled ObservedResources, which
+		// Note that you also have to check the uid if you have a local controlled Observe, which
 		// is dependent on the actual instance, to detect that a Pod was recreated with the same name
 		logrus.Infof("Sync/Add/Update for Pod %w\n", obj.(*apiV1.Pod).GetName())
 
 		// get object metadata
 		meta := getMetaData(obj)
-
-		// we must have an event Handler configured
-		if w.config.Handler == nil {
-			return fmt.Errorf("Event Handler not defined.")
-		}
 
 		// handleEvent events based on its type
 		switch newEvent.eventType {
@@ -174,14 +169,14 @@ func (w *Watcher) handleEvent(newEvent Event) error {
 			// compare CreationTimestamp and serverStartTime and alert only on latest events
 			// Could be Replaced by using Delta or DeltaFIFO
 			if meta.CreationTimestamp.Sub(startTime).Seconds() > 0 {
-				w.config.Handler.OnCreate(newEvent, obj)
+				w.publisher.OnCreate(newEvent, obj)
 				return nil
 			}
 		case "update":
-			w.config.Handler.OnUpdate(newEvent, obj)
+			w.publisher.OnUpdate(newEvent, obj)
 			return nil
 		case "delete":
-			w.config.Handler.OnDelete(newEvent, obj)
+			w.publisher.OnDelete(newEvent, obj)
 			return nil
 		}
 	}

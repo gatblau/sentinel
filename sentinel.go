@@ -15,7 +15,6 @@
 package main
 
 import (
-	"errors"
 	apiV1 "k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -32,18 +31,25 @@ const maxRetries = 5
 
 var startTime time.Time
 
-// watch for changes to one or more kubernetes resources and calls registered
-// events handlers
+// watch for changes to one or more kubernetes resources and calls the configured publisher
 type Sentinel struct {
-	client kubernetes.Interface
-	config *Config
+	client    kubernetes.Interface
+	config    *Config
+	publisher Publisher
 }
 
 // starts observing for K8S resource changes
 func (s *Sentinel) Start() error {
-	if s.config == nil {
-		return errors.New("Config must me provided.")
+	// loads the configuration
+	c, err := NewConfig()
+	if err != nil {
+		s.config = &c
+	} else {
+		return err
 	}
+
+	// sets the publisher for the sentinel
+	s.publisher = s.getPublisher()
 
 	// gets a k8s client
 	client, err := getKubeClient()
@@ -99,7 +105,7 @@ func (s *Sentinel) startWatcher(client kubernetes.Interface, objType runtime.Obj
 	)
 
 	// creates a new controller to handle object status changes
-	watcher := newWatcher(informer, resourceType, *s.config)
+	watcher := newWatcher(informer, resourceType, s.publisher)
 
 	// run the controller
 	go watcher.run()
@@ -167,4 +173,20 @@ func (s *Sentinel) newList(client kubernetes.Interface, options metaV1.ListOptio
 	default:
 		return nil, nil
 	}
+}
+
+// gets the publisher specified in the configuration
+func (s *Sentinel) getPublisher() Publisher {
+	var pub Publisher
+	switch s.config.Publishers.Mode {
+	case "webhook":
+		pub = new(WebhookPub)
+	case "broker":
+		pub = new(LoggerPub)
+	case "logger":
+		pub = new(BrokerPub)
+	}
+	// initialise the publisher passing a de-referenced configuration
+	pub.Init(*s.config)
+	return pub
 }

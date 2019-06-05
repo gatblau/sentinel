@@ -15,15 +15,8 @@
 package main
 
 func main() {
-	sentinel := &Sentinel{
-		config: &Config{
-			Handler: &Webhook{URI: ""},
-			Observe: ObservedResources{Pod: true},
-		},
-	}
-
+	sentinel := new(Sentinel)
 	err := sentinel.Start()
-
 	if err != nil {
 		panic(err)
 	}
