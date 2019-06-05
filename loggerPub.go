@@ -14,30 +14,29 @@
 */
 package main
 
-// the interface implemented by a controller publisher
-type Publisher interface {
-	Init(c Config)
-	OnCreate(e Event, o interface{})
-	OnDelete(e Event, o interface{})
-	OnUpdate(e Event, o interface{})
+import (
+	"github.com/sirupsen/logrus"
+)
+
+// logs events to standard output
+type LoggerPub struct {
 }
 
-type Event struct {
-	key          string
-	eventType    string
-	namespace    string
-	resourceType string
+func (pub *LoggerPub) Init(c Config) {
 }
 
-// Event represent an event got from k8s api server
-// Events from different endpoints need to be casted to KubewatchEvent
-// before being able to be handled by Handler
-type PublishedEvent struct {
-	Namespace string
-	Kind      string
-	Component string
-	Host      string
-	Reason    string
-	Status    string
-	Name      string
+func (pub *LoggerPub) OnCreate(event Event, obj interface{}) {
+	pub.notify(event, obj, "created")
+}
+
+func (pub *LoggerPub) OnDelete(event Event, obj interface{}) {
+	pub.notify(event, obj, "deleted")
+}
+
+func (pub *LoggerPub) OnUpdate(event Event, obj interface{}) {
+	pub.notify(event, obj, "updated")
+}
+
+func (pub *LoggerPub) notify(event Event, obj interface{}, action string) {
+	logrus.Infof("action %s - event %+v --> %+v\n", action, event, obj)
 }

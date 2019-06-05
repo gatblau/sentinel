@@ -18,22 +18,25 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type Webhook struct {
-	URI string
+// logs events to kafka
+type BrokerPub struct {
 }
 
-func (hook *Webhook) OnCreate(event Event, obj interface{}) {
-	hook.notify(event, obj, "created")
+func (pub *BrokerPub) Init(c Config) {
 }
 
-func (hook *Webhook) OnDelete(event Event, obj interface{}) {
-	hook.notify(event, obj, "deleted")
+func (pub *BrokerPub) OnCreate(event Event, obj interface{}) {
+	pub.notify(event, obj, "created")
 }
 
-func (hook *Webhook) OnUpdate(event Event, obj interface{}) {
-	hook.notify(event, obj, "updated")
+func (pub *BrokerPub) OnDelete(event Event, obj interface{}) {
+	pub.notify(event, obj, "deleted")
 }
 
-func (hook *Webhook) notify(event Event, obj interface{}, action string) {
+func (pub *BrokerPub) OnUpdate(event Event, obj interface{}) {
+	pub.notify(event, obj, "updated")
+}
+
+func (pub *BrokerPub) notify(event Event, obj interface{}, action string) {
 	logrus.Infof("action %s - event %+v --> %+v\n", action, event, obj)
 }
