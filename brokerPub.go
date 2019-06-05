@@ -22,7 +22,7 @@ import (
 type BrokerPub struct {
 }
 
-func (pub *BrokerPub) Init(c Config) {
+func (pub *BrokerPub) Init(c *Config) {
 }
 
 func (pub *BrokerPub) OnCreate(event Event, obj interface{}) {

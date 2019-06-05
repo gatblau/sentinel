@@ -16,7 +16,7 @@ package main
 
 import (
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
+	v "github.com/spf13/viper"
 	"strings"
 )
 
@@ -72,13 +72,13 @@ type Observe struct {
 // creates a new configuration file passed by value
 // to avoid thread sync issues
 func NewConfig() (Config, error) {
-	v := viper.New()
+	//v := viper.New()
 	// loads the configuration file
 	v.SetConfigName("config")
 	v.SetConfigType("toml")
 	v.AddConfigPath(".")
-	err := viper.ReadInConfig() // find and read the config file
-	if err != nil {             // handle errors reading the config file
+	err := v.ReadInConfig() // find and read the config file
+	if err != nil {         // handle errors reading the config file
 		logrus.Errorf("Fatal error config file: %s \n", err)
 		return Config{}, err
 	}

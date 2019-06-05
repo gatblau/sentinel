@@ -16,7 +16,7 @@ package main
 
 // the interface implemented by a controller publisher
 type Publisher interface {
-	Init(c Config)
+	Init(c *Config)
 	OnCreate(e Event, o interface{})
 	OnDelete(e Event, o interface{})
 	OnUpdate(e Event, o interface{})

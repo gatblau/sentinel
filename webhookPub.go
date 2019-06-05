@@ -27,7 +27,7 @@ type WebhookPub struct {
 }
 
 // gets the configuration for the publisher
-func (pub *WebhookPub) Init(c Config) {
+func (pub *WebhookPub) Init(c *Config) {
 	pub.uri = c.Publishers.Webhook.URI
 	pub.authentication = c.Publishers.Webhook.Authentication
 	if pub.authentication == "basic" {

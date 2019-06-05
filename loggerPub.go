@@ -22,7 +22,7 @@ import (
 type LoggerPub struct {
 }
 
-func (pub *LoggerPub) Init(c Config) {
+func (pub *LoggerPub) Init(c *Config) {
 }
 
 func (pub *LoggerPub) OnCreate(event Event, obj interface{}) {
