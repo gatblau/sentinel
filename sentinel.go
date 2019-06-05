@@ -42,7 +42,7 @@ type Sentinel struct {
 func (s *Sentinel) Start() error {
 	// loads the configuration
 	c, err := NewConfig()
-	if err != nil {
+	if err == nil {
 		s.config = &c
 	} else {
 		return err
@@ -186,7 +186,6 @@ func (s *Sentinel) getPublisher() Publisher {
 	case "logger":
 		pub = new(BrokerPub)
 	}
-	// initialise the publisher passing a de-referenced configuration
-	pub.Init(*s.config)
+	pub.Init(s.config)
 	return pub
 }
