@@ -16,22 +16,23 @@ package main
 
 import (
 	"github.com/sirupsen/logrus"
-	v "github.com/spf13/viper"
+	"github.com/spf13/viper"
 	"strings"
 )
 
 // Sentinel configuration
 type Config struct {
 	KubeConfig string
+	LoginLevel string
 	Publishers Publishers
 	Observe    Observe
 }
 
 // the configuration for the event publishers
 type Publishers struct {
-	Mode    string
-	Webhook Webhook
-	Broker  Broker
+	Publisher string
+	Webhook   Webhook
+	Broker    Broker
 }
 
 // the configuration for the web hook publisher
@@ -72,7 +73,8 @@ type Observe struct {
 // creates a new configuration file passed by value
 // to avoid thread sync issues
 func NewConfig() (Config, error) {
-	//v := viper.New()
+	logrus.Infof("Loading configuration.")
+	v := viper.New()
 	// loads the configuration file
 	v.SetConfigName("config")
 	v.SetConfigType("toml")
@@ -86,9 +88,11 @@ func NewConfig() (Config, error) {
 	// binds all environment variables to make it container friendly
 	v.AutomaticEnv()
 	v.SetEnvPrefix("SL")
+	// replace character to support environment variable format
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	_ = v.BindEnv("KubeConfig")
-	_ = v.BindEnv("Publishers.Mode")
+	_ = v.BindEnv("LoginLevel")
+	_ = v.BindEnv("Publishers.Publisher")
 	_ = v.BindEnv("Publishers.Webhook.URI")
 	_ = v.BindEnv("Publishers.Webhook.Authentication")
 	_ = v.BindEnv("Publishers.Webhook.Username")
@@ -118,21 +122,25 @@ func NewConfig() (Config, error) {
 
 	// general configuration
 	c.KubeConfig = v.GetString("KubeConfig")
-	c.Publishers.Webhook.URI = v.GetString("Publishers.Webhook.URI")
+	c.LoginLevel = v.GetString("LoginLevel")
+
+	// publishers configuration
+	c.Publishers.Publisher = v.GetString("Publishers.Publisher")
 
 	// webhook publisher configuration
+	c.Publishers.Webhook.URI = v.GetString("Publishers.Webhook.URI")
 	c.Publishers.Webhook.Authentication = v.GetString("Publishers.Webhook.Authentication")
 	c.Publishers.Webhook.Username = v.GetString("Publishers.Webhook.Username")
 	c.Publishers.Webhook.Password = v.GetString("Publishers.Webhook.Password")
 
 	// broker publisher configuration
-	c.Publishers.Broker.Addr = v.GetString("")
-	c.Publishers.Broker.Brokers = v.GetString("")
-	c.Publishers.Broker.Certificate = v.GetString("")
-	c.Publishers.Broker.Key = v.GetString("")
-	c.Publishers.Broker.CA = v.GetString("")
-	c.Publishers.Broker.Verbose = v.GetBool("")
-	c.Publishers.Broker.Verify = v.GetBool("")
+	c.Publishers.Broker.Addr = v.GetString("Publishers.Broker.Addr")
+	c.Publishers.Broker.Brokers = v.GetString("Publishers.Broker.Brokers")
+	c.Publishers.Broker.Certificate = v.GetString("Publishers.Broker.Certificate")
+	c.Publishers.Broker.Key = v.GetString("Publishers.Broker.Key")
+	c.Publishers.Broker.CA = v.GetString("Publishers.Broker.CA")
+	c.Publishers.Broker.Verbose = v.GetBool("Publishers.Broker.Verbose")
+	c.Publishers.Broker.Verify = v.GetBool("Publishers.Broker.Verify")
 
 	// observable objects configuration
 	c.Observe.Service = v.GetBool("Observe.Service")

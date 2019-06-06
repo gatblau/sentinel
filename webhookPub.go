@@ -40,18 +40,18 @@ func (pub *WebhookPub) Init(c *Config) {
 	}
 }
 
-func (pub *WebhookPub) OnCreate(event Event, obj interface{}) {
-	pub.notify(event, obj, "created")
+func (pub *WebhookPub) OnCreate(change Change, obj interface{}) {
+	pub.notify(change)
 }
 
-func (pub *WebhookPub) OnDelete(event Event, obj interface{}) {
-	pub.notify(event, obj, "deleted")
+func (pub *WebhookPub) OnDelete(change Change, obj interface{}) {
+	pub.notify(change)
 }
 
-func (pub *WebhookPub) OnUpdate(event Event, obj interface{}) {
-	pub.notify(event, obj, "updated")
+func (pub *WebhookPub) OnUpdate(change Change, obj interface{}) {
+	pub.notify(change)
 }
 
-func (pub *WebhookPub) notify(event Event, obj interface{}, action string) {
-	logrus.Infof("action %s - event %+v --> %+v\n", action, event, obj)
+func (pub *WebhookPub) notify(change Change) {
+	logrus.Warnf("WEBHOOK PUBLISHER NOT IMPLEMENTED! Trying to publish change %s for object %s\n", change.changeType, change.objectType)
 }

@@ -1,30 +1,38 @@
 # Sentinel configuration file
 # the default path to the kube config file for out of cluster configuration
 KubeConfig = "~/.kube/config"
+# sets the login level
+LoginLevel = "Info"
+# number of retries before controller
 
 [Publishers]
     # defines which publisher to use (i.e. webhook, broker, logger)
-    Mode = "logger"
+    Publisher = "logger"
+
+    # logger publisher configuration
+    [Publishers.Logger]
+    # whether the logger writes to "stdout" or "file"
+    Output = "stdout"
+    # the path to the log folder, only required if Output = "file"
+    LogFolder = "logs"
 
     # web hook publisher configuration
-    [Webhook]
+    [Publishers.Webhook]
     # the uri of the webhook
-    URI = ""
+    URI = "http://localhost:8080"
     # authentication mode to use (i.e. none, basic)
     Authentication = "none"
     # the optional username for basic authentication
-    Username = ""
+    Username = "sentinel"
     # the optional password for basic authentication
-    Password = ""
+    Password = "s3nt1n3l"
 
     # message broker publisher configuration
-    [Broker]
+    [Publishers.Broker]
     # the address to bind to
     Addr = ":8080"
     # The Kafka brokers to connect to, as a comma separated list
     Brokers = ""
-    # turn on logging
-    Verbose = false
     # optional certificate file for client authentication
     Certificate = ""
     # optional key file for client authentication

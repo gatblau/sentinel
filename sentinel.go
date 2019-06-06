@@ -15,6 +15,8 @@
 package main
 
 import (
+	"fmt"
+	"github.com/sirupsen/logrus"
 	apiV1 "k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -23,6 +25,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 )
@@ -48,17 +51,57 @@ func (s *Sentinel) Start() error {
 		return err
 	}
 
-	// sets the publisher for the sentinel
-	s.publisher = s.getPublisher()
+	// try and parse the logging level in the configuration
+	level, err := logrus.ParseLevel(c.LoginLevel)
+	if err != nil {
+		// if the value was not recognised then return the error
+		return err
+	}
+	// otherwise sets the logging level for the entire system
+	logrus.SetLevel(level)
+	logrus.Infof("%s has been set as the logger level.", strings.ToUpper(c.LoginLevel))
+
+	// registers the publisher used by Sentinel
+	s.publisher, err = s.getPublisher()
+
+	if err != nil {
+		// if the resolution of the publisher failed then return the error
+		return err
+	} else {
+		logrus.Infof("%s publisher has been registered.", strings.ToUpper(s.config.Publishers.Publisher))
+	}
 
 	// gets a k8s client
 	client, err := getKubeClient()
 
 	if err != nil {
+		// if the creation of the k8s client failed then return the error
 		return err
+	} else {
+		logrus.Infof("Kubernetes client created.")
 	}
 
-	// creates controllers to listen to events
+	// launch the required controllers to listen to object state changes
+	s.startWatchers(client)
+
+	logrus.Infof("Sentinel ready and looking out for changes.")
+
+	// waits until a SIGINT or SIGTERM signal is raised
+	// creates a channel to pass kernel signals to terminate the main process
+	terminateCh := make(chan os.Signal, 1)
+	// sends any SIGINT or SIGTERM signals to the channel
+	signal.Notify(terminateCh, syscall.SIGINT)
+	// interrupt ctrl+c
+	signal.Notify(terminateCh, syscall.SIGTERM)
+	// terminate
+	// waits until any termination signals are raised
+	<-terminateCh
+
+	return nil
+}
+
+// launch k8s controllers to listen to object state changes
+func (s *Sentinel) startWatchers(client kubernetes.Interface) {
 	if s.config.Observe.Pod {
 		s.startWatcher(client, &apiV1.Pod{}, "pod")
 	}
@@ -71,18 +114,6 @@ func (s *Sentinel) Start() error {
 	if s.config.Observe.Service {
 		s.startWatcher(client, &apiV1.Service{}, "service")
 	}
-
-	// creates a channel to pass kernel signals to terminate the main process
-	terminateCh := make(chan os.Signal, 1)
-
-	// sends any SIGINT or SIGTERM signals to the channel
-	signal.Notify(terminateCh, syscall.SIGINT)  // interrupt ctrl+c
-	signal.Notify(terminateCh, syscall.SIGTERM) // terminate
-
-	// waits until any termination signals are raised
-	<-terminateCh
-
-	return nil
 }
 
 // starts a new watcher K8S controller to listen for status change events and trigger a handling function
@@ -176,16 +207,20 @@ func (s *Sentinel) newList(client kubernetes.Interface, options metaV1.ListOptio
 }
 
 // gets the publisher specified in the configuration
-func (s *Sentinel) getPublisher() Publisher {
+func (s *Sentinel) getPublisher() (Publisher, error) {
 	var pub Publisher
-	switch s.config.Publishers.Mode {
+	switch s.config.Publishers.Publisher {
 	case "webhook":
 		pub = new(WebhookPub)
 	case "broker":
-		pub = new(LoggerPub)
-	case "logger":
 		pub = new(BrokerPub)
+	case "logger":
+		pub = new(LoggerPub)
+	default:
+		return nil, fmt.Errorf(
+			"Failed to register a publisher: the value '%s' in the configuration could not be recognised.",
+			s.config.Publishers.Publisher)
 	}
 	pub.Init(s.config)
-	return pub
+	return pub, nil
 }
