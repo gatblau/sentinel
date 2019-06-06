@@ -1,4 +1,4 @@
-<img src="./pics/sentinel_small.png" align="right" height="150" width="150"/>
+<img src="./pics/sentinel_small.png" align="right" height="200" width="200"/>
 
 # Sentinel 
 
@@ -8,7 +8,9 @@ The application process can either run inside or outside of a [Kubernetes](https
 
 The following image shows how the application works:
 
+<div style="text-align:center">
 <img src="./pics/arc.png" align="center" height="350" width="350"/>
+</div>
 
 ## API compatibility
 
@@ -29,7 +31,9 @@ __NOTE__: the minimal required [go version is 1.12.5](https://golang.org/dl/)
 
 The following example shows a configuration where events are published from three Kubernetes clusters into Kafka:
 
-<img src="./pics/kafka.png" align="center" height="420" width="350"/>
+<div style="text-align:center">
+<img src="./pics/kafka.png" height="420" width="350"/>
+</div>
 
 ## Configuration
 

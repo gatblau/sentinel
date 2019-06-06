@@ -144,11 +144,11 @@ func (w *Watcher) nextItem() bool {
 func (w *Watcher) publish(change Change) error {
 	logrus.Tracef("Ready to publish %s changes for %s %s.", change.changeType, strings.ToUpper(change.objectType), change.key)
 	obj, exists, err := w.informer.GetIndexer().GetByKey(change.key)
+	if !exists {
+		logrus.Tracef("%s %s does not exist anymore.", strings.ToUpper(change.objectType), change.key)
+	}
 	if err != nil {
 		return fmt.Errorf("Failed to retrieve object with key %s: %s", change.key, err)
-	}
-	if !exists {
-		logrus.Infof("%s %s does not exist anymore.", strings.ToUpper(change.objectType), change.key)
 	} else {
 		// get object metadata
 		meta := getMetaData(obj)
