@@ -1,4 +1,4 @@
-<img src="./pics/sentinel_small.png" align="right" height="100" width="100"/>
+<img src="./pics/sentinel_small.png" align="right" height="150" width="150"/>
 
 # Sentinel 
 
@@ -8,7 +8,7 @@ The application process can either run inside or outside of a [Kubernetes](https
 
 The following image shows how the application works:
 
-<img src="./pics/arc.png" align="center" height="270" width="270"/>
+<img src="./pics/arc.png" align="center" height="350" width="350"/>
 
 ## API compatibility
 
@@ -29,60 +29,67 @@ __NOTE__: the minimal required [go version is 1.12.5](https://golang.org/dl/)
 
 The following example shows a configuration where events are published from three Kubernetes clusters into Kafka:
 
-<img src="./pics/kafka.png" align="center" height="350" width="300"/>
+<img src="./pics/kafka.png" align="center" height="420" width="350"/>
 
 ## Configuration
 
 The Sentinel process can be configured by either a [config file](./config.toml) or via environment variables.
 
-Environment variables is set, override the values in the config file.
+When environment variables are set, they override the values in the config file.
 
-The available variables are described below.
+The available environment variables are described below.
 
 ### General Vars
 
-| Name | Description | Default |
-|---|---|---|
-| __SL_KUBECONFIG__ | the path to the kubernetes configuration file used by the Sentinel to connect to the kubernetes API. | ~/.kube/config |
-| __SL_PUBLISHERS_MODE__ | defines which publisher to use (i.e. webhook, broker, logger) | logger |
+| File Var | Environment Var | Description | Default |
+|---|---|---|---|
+| KubeConfig | SL_KUBECONFIG | the path to the kubernetes configuration file used by the Sentinel to connect to the kubernetes API. | ~/.kube/config |
+| LoginLevel | SL_LOGINLEVEL | defines the login level used by the software. Possible values are: __Trace, Debug, Info, Warning, Error, Fatal and Panic__. | Info |
+| Publishers.Publisher| SL_PUBLISHERS_PUBLISHER | defines which publisher to use (i.e. webhook, broker or logger). The logger publisher is there to write to standard output. | logger |
+
+### _Logger Publisher Variables_
+
+| File Var | Environment Var | Description | Default |
+|---|---|---|---|
+| Publishers.Logger.Output| SL_PUBLISHERS_LOGGER_OUTPUT | whether to log to the standard output (stdout) or to the file system (file) | stdout |
+| Publishers.Logger.LogFolder| SL_PUBLISHERS_LOGGER_LOGFOLDER | the path to the log folder, only required if Output = "file" | logs |
 
 ### _Webhook Publisher Variables_
 
-| Name | Description | Default |
-|---|---|---|
-| __SL_PUBLISHERS_WEBHOOK_URI__ | the uri of the webhook | localhost:8080/sentinel |
-| __SL_PUBLISHERS_WEBHOOK_AUTHENTICATION__ | authentication mode to use for posting events to the webhook endpoint (i.e. none, basic) | - |
-| __SL_PUBLISHERS_WEBHOOK_USERNAME__ | the optional username for basic authentication | sentinel |
-| __SL_PUBLISHERS_WEBHOOK_PASSWORD__ | the optional password for basic authentication | s3nt1nel |
+| File Var | Environment Var | Description | Default |
+|---|---|---|---|
+| Publishers.Webhook.URI | SL_PUBLISHERS_WEBHOOK_URI | the uri of the webhook | localhost:8080/sentinel |
+| Publishers.Webhook.Authentication | SL_PUBLISHERS_WEBHOOK_AUTHENTICATION | authentication mode to use for posting events to the webhook endpoint (i.e. none, basic) | - |
+| Publishers.Webhook.Username | SL_PUBLISHERS_WEBHOOK_USERNAME | the optional username for basic authentication | sentinel |
+| Publishers.Webhook.Password | SL_PUBLISHERS_WEBHOOK_PASSWORD | the optional password for basic authentication | s3nt1nel |
 
 ### _Broker Publisher Variables_
 
-| Name | Description | Default |
-|---|---|---|
-| __SL_PUBLISHERS_BROKER_ADDR__ | the address to bind to | ":8080" |
-| __SL_PUBLISHERS_BROKER_BROKERS__ | the Kafka brokers to connect to, as a comma separated list | - |
-| __SL_PUBLISHERS_BROKER_VERBOSE__ | turn on logging | false |
-| __SL_PUBLISHERS_BROKER_CERTIFICATE__ | optional certificate file for client authentication | - |
-| __SL_PUBLISHERS_BROKER_KEY__ | optional key file for client authentication | - |
-| __SL_PUBLISHERS_BROKER_CA__ | optional certificate authority file for TLS client authentication | - |
-| __SL_PUBLISHERS_BROKER_VERIFY__ | optional verify ssl certificates chain | false |
+| File Var | Environment Var | Description | Default |
+|---|---|---|---|
+| Publishers.Broker.Addr | SL_PUBLISHERS_BROKER_ADDR | the address to bind to | ":8080" |
+| Publishers.Broker.Brokers | SL_PUBLISHERS_BROKER_BROKERS | the Kafka brokers to connect to, as a comma separated list | - |
+| Publishers.Broker.Certificate | SL_PUBLISHERS_BROKER_CERTIFICATE | optional certificate file for client authentication | - |
+| Publishers.Broker.Key | SL_PUBLISHERS_BROKER_KEY | optional key file for client authentication | - |
+| Publishers.Broker.CA | SL_PUBLISHERS_BROKER_CA | optional certificate authority file for TLS client authentication | - |
+| Publishers.Broker.Verify | SL_PUBLISHERS_BROKER_VERIFY | optional verify ssl certificates chain | false |
 
 ### _Observable Object Variables_
 
-| Name | Description | Default |
-|---|---|---|
-| __SL_OBSERVE_SERVICE__ | whether to observe create, update and delete service events | true |
-| __SL_OBSERVE_POD__ | whether to observe create, update and delete pod events | true |
-| __SL_OBSERVE_PERSISTENTVOLUME__ | whether to observe create, update and delete persistent volume events | true |
-| __SL_OBSERVE_NAMESPACE__ | whether to observe create, update and delete namespace events | true |
-| __SL_OBSERVE_DEPLOYMENT__ | whether to observe create, update and delete deployment events | false |
-| __SL_OBSERVE_REPLICATIONCONTROLLER__ | whether to observe create, update and delete replication controller events | false |
-| __SL_OBSERVE_REPLICASET__ | whether to observe create, update and delete replica set events | false |
-| __SL_OBSERVE_DAEMONSET__ | whether to observe create, update and delete daemon set events | false |
-| __SL_OBSERVE_JOB__ | whether to observe create, update and delete job events | false |
-| __SL_OBSERVE_SECRET__ | whether to observe create, update and delete secret events | false |
-| __SL_OBSERVE_CONFIGMAP__ | whether to observe create, update and delete config map events | false |
-| __SL_OBSERVE_INGRESS__ | whether to observe create, update and delete ingress events | false |
+| File Var | Environment Var | Description | Default |
+|---|---|---|---|
+| Observe.Service | SL_OBSERVE_SERVICE | whether to observe create, update and delete service events | true |
+| Observe.Pod | SL_OBSERVE_POD | whether to observe create, update and delete pod events | true |
+| Observe.PersistentVolume | SL_OBSERVE_PERSISTENTVOLUME | whether to observe create, update and delete persistent volume events | true |
+| Observe.Namespace | SL_OBSERVE_NAMESPACE | whether to observe create, update and delete namespace events | true |
+| Observe.Deployment | SL_OBSERVE_DEPLOYMENT | whether to observe create, update and delete deployment events | false |
+| Observe.ReplicationController | SL_OBSERVE_REPLICATIONCONTROLLER | whether to observe create, update and delete replication controller events | false |
+| Observe.ReplicateSet | SL_OBSERVE_REPLICASET | whether to observe create, update and delete replica set events | false |
+| Observe.DaemonSet | SL_OBSERVE_DAEMONSET | whether to observe create, update and delete daemon set events | false |
+| Observe.Job | SL_OBSERVE_JOB | whether to observe create, update and delete job events | false |
+| Observe.Secret | SL_OBSERVE_SECRET | whether to observe create, update and delete secret events | false |
+| Observe.ConfigMap | SL_OBSERVE_CONFIGMAP | whether to observe create, update and delete config map events | false |
+| Observe.Ingress | SL_OBSERVE_INGRESS | whether to observe create, update and delete ingress events | false |
 
 
 

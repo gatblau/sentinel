@@ -25,18 +25,18 @@ type BrokerPub struct {
 func (pub *BrokerPub) Init(c *Config) {
 }
 
-func (pub *BrokerPub) OnCreate(event Event, obj interface{}) {
-	pub.notify(event, obj, "created")
+func (pub *BrokerPub) OnCreate(change Change, obj interface{}) {
+	pub.notify(change)
 }
 
-func (pub *BrokerPub) OnDelete(event Event, obj interface{}) {
-	pub.notify(event, obj, "deleted")
+func (pub *BrokerPub) OnDelete(change Change, obj interface{}) {
+	pub.notify(change)
 }
 
-func (pub *BrokerPub) OnUpdate(event Event, obj interface{}) {
-	pub.notify(event, obj, "updated")
+func (pub *BrokerPub) OnUpdate(change Change, obj interface{}) {
+	pub.notify(change)
 }
 
-func (pub *BrokerPub) notify(event Event, obj interface{}, action string) {
-	logrus.Infof("action %s - event %+v --> %+v\n", action, event, obj)
+func (pub *BrokerPub) notify(change Change) {
+	logrus.Warnf("BROKER PUBLISHER NOT IMPLEMENTED! Trying to publish change %s for object %s\n", change.changeType, change.objectType)
 }

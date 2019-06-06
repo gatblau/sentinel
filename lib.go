@@ -25,7 +25,9 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/util/workqueue"
 	"os"
+	"strings"
 )
 
 // gets an environment variable or the defaultValue if the variable is not set
@@ -54,26 +56,26 @@ func getKubeConfig() (*rest.Config, error) {
 	kubeConfigFile := getKubeConfigPath()
 
 	if _, err := os.Stat(kubeConfigFile); err == nil {
-		logrus.Info("Kube config file found: attempting out of cluster configuration")
+		logrus.Info("Kube config file found: attempting out of cluster configuration.")
 		// if the kube config file exists then do an outside of cluster configuration
 		config, err = clientcmd.BuildConfigFromFlags("", kubeConfigFile)
 		if err != nil {
-			logrus.Errorf("Could create out of cluster configuration: %v", err)
+			logrus.Errorf("Could create out of cluster configuration: %v.", err)
 			return nil, err
 		}
 
 	} else if os.IsNotExist(err) {
-		logrus.Info("Kube config file not found: attempting in cluster configuration")
+		logrus.Info("Kube config file not found: attempting in cluster configuration.")
 		// the kube config file was not found then do in cluster configuration
 		config, err = rest.InClusterConfig()
 		if err != nil {
-			logrus.Errorf("Could create in cluster configuration: %v", err)
+			logrus.Errorf("Could create in cluster configuration: %v.", err)
 			return nil, err
 		}
 	} else {
 		// kube config might be there or not but it failed anyway :(
 		if err != nil {
-			logrus.Errorf("Could not figure out the Kube client configuration: %v", err)
+			logrus.Errorf("Could not figure out the Kube client configuration: %v.", err)
 			return nil, err
 		}
 	}
@@ -88,7 +90,7 @@ func getKubeClient() (kubernetes.Interface, error) {
 	}
 	client, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		logrus.Fatalf("Can not create kubernetes client: %v", err)
+		logrus.Fatalf("Can not create kubernetes client: %v.", err)
 		return nil, err
 	}
 	return client, nil
@@ -122,4 +124,14 @@ func getMetaData(obj interface{}) metaV1.ObjectMeta {
 		objectMeta = object.ObjectMeta
 	}
 	return objectMeta
+}
+
+// add a change to the processing queue
+func addToQueue(queue workqueue.RateLimitingInterface, change Change, err error) {
+	if err == nil {
+		logrus.Tracef("Queueing %s change for %s %s.", change.changeType, strings.ToUpper(change.objectType), change.key)
+		queue.Add(change)
+	} else {
+		logrus.Errorf("Error adding %s change for %s %s to processing queue.", change.changeType, strings.ToUpper(change.objectType), change.key)
+	}
 }

@@ -14,22 +14,23 @@
 */
 package main
 
-// the interface implemented by a controller publisher
+// the interface implemented by a object state change publisher
 type Publisher interface {
 	Init(c *Config)
-	OnCreate(e Event, o interface{})
-	OnDelete(e Event, o interface{})
-	OnUpdate(e Event, o interface{})
+	OnCreate(change Change, obj interface{})
+	OnDelete(change Change, obj interface{})
+	OnUpdate(change Change, obj interface{})
 }
 
-type Event struct {
-	key          string
-	eventType    string
-	namespace    string
-	resourceType string
+// the metadata for a K8S object change
+type Change struct {
+	key        string
+	changeType string
+	namespace  string
+	objectType string
 }
 
-// Event represent an event got from k8s api server
+// Represent an event got from k8s api server
 // Events from different endpoints need to be casted to KubewatchEvent
 // before being able to be handled by Handler
 type PublishedEvent struct {

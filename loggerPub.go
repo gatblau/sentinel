@@ -15,28 +15,37 @@
 package main
 
 import (
+	"encoding/json"
 	"github.com/sirupsen/logrus"
+	"strings"
 )
 
-// logs events to standard output
+// logs events to standard output or file
 type LoggerPub struct {
 }
 
-func (pub *LoggerPub) Init(c *Config) {
+func (pub *LoggerPub) Init(config *Config) {
 }
 
-func (pub *LoggerPub) OnCreate(event Event, obj interface{}) {
-	pub.notify(event, obj, "created")
+func (pub *LoggerPub) OnCreate(change Change, obj interface{}) {
+	pub.notify(change, obj)
 }
 
-func (pub *LoggerPub) OnDelete(event Event, obj interface{}) {
-	pub.notify(event, obj, "deleted")
+func (pub *LoggerPub) OnDelete(change Change, obj interface{}) {
+	pub.notify(change, obj)
 }
 
-func (pub *LoggerPub) OnUpdate(event Event, obj interface{}) {
-	pub.notify(event, obj, "updated")
+func (pub *LoggerPub) OnUpdate(change Change, obj interface{}) {
+	pub.notify(change, obj)
 }
 
-func (pub *LoggerPub) notify(event Event, obj interface{}, action string) {
-	logrus.Infof("action %s - event %+v --> %+v\n", action, event, obj)
+func (pub *LoggerPub) notify(change Change, obj interface{}) {
+	objBytes, err := json.Marshal(obj)
+	if err != nil {
+		logrus.Errorf("Can't serialise change: %+v", change)
+	}
+	logrus.Infof("%s %s: %s",
+		strings.ToUpper(change.objectType),
+		change.changeType,
+		strings.Replace(string(objBytes), "\\", "", -1))
 }
