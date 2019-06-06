@@ -44,8 +44,9 @@ func (pub *LoggerPub) notify(change Change, obj interface{}) {
 	if err != nil {
 		logrus.Errorf("Can't serialise change: %+v", change)
 	}
-	logrus.Infof("%s %s: %s",
+	logrus.Infof("%s %s %s: %s",
 		strings.ToUpper(change.objectType),
+		change.key,
 		change.changeType,
 		strings.Replace(string(objBytes), "\\", "", -1))
 }
