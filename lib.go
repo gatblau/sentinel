@@ -15,86 +15,17 @@
 package main
 
 import (
-	"fmt"
-	"github.com/sirupsen/logrus"
 	appsV1 "k8s.io/api/apps/v1"
 	batchV1 "k8s.io/api/batch/v1"
-	apiV1 "k8s.io/api/core/v1"
+	coreV1 "k8s.io/api/core/v1"
 	extV1beta1 "k8s.io/api/extensions/v1beta1"
+	rbacV1 "k8s.io/api/rbac/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/client-go/util/workqueue"
-	"os"
-	"strings"
+	"math/rand"
 )
-
-// gets an environment variable or the defaultValue if the variable is not set
-func getEnv(key string, defaultValue string) string {
-	value := ""
-	if os.Getenv(key) != "" {
-		value = os.Getenv(key)
-	} else {
-		value = defaultValue
-	}
-	return value
-}
-
-// gets the kube config default path
-func getKubeConfigPath() string {
-	return getEnv("KUBECONFIG", fmt.Sprintf("%s/.kube/config", os.Getenv("HOME")))
-}
-
-// gets the K8S client configuration either inside or outside of the cluster depending on
-// whether the kube config file could be found
-func getKubeConfig() (*rest.Config, error) {
-	// k8s client configuration
-	var config *rest.Config
-
-	// gets the path to the kube config file
-	kubeConfigFile := getKubeConfigPath()
-
-	if _, err := os.Stat(kubeConfigFile); err == nil {
-		logrus.Info("Kube config file found: attempting out of cluster configuration.")
-		// if the kube config file exists then do an outside of cluster configuration
-		config, err = clientcmd.BuildConfigFromFlags("", kubeConfigFile)
-		if err != nil {
-			logrus.Errorf("Could create out of cluster configuration: %v.", err)
-			return nil, err
-		}
-
-	} else if os.IsNotExist(err) {
-		logrus.Info("Kube config file not found: attempting in cluster configuration.")
-		// the kube config file was not found then do in cluster configuration
-		config, err = rest.InClusterConfig()
-		if err != nil {
-			logrus.Errorf("Could create in cluster configuration: %v.", err)
-			return nil, err
-		}
-	} else {
-		// kube config might be there or not but it failed anyway :(
-		if err != nil {
-			logrus.Errorf("Could not figure out the Kube client configuration: %v.", err)
-			return nil, err
-		}
-	}
-	return config, nil
-}
-
-// gets an instance of the k8s client
-func getKubeClient() (kubernetes.Interface, error) {
-	config, err := getKubeConfig()
-	if err != nil {
-		return nil, err
-	}
-	client, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		logrus.Fatalf("Can not create kubernetes client: %v.", err)
-		return nil, err
-	}
-	return client, nil
-}
 
 // gets the metadata for the persisted resource
 func getMetaData(obj interface{}) metaV1.ObjectMeta {
@@ -102,36 +33,119 @@ func getMetaData(obj interface{}) metaV1.ObjectMeta {
 	switch object := obj.(type) {
 	case *appsV1.Deployment:
 		objectMeta = object.ObjectMeta
-	case *apiV1.ReplicationController:
+	case *coreV1.ReplicationController:
 		objectMeta = object.ObjectMeta
 	case *appsV1.ReplicaSet:
 		objectMeta = object.ObjectMeta
 	case *appsV1.DaemonSet:
 		objectMeta = object.ObjectMeta
-	case *apiV1.Service:
+	case *coreV1.Service:
 		objectMeta = object.ObjectMeta
-	case *apiV1.Pod:
+	case *coreV1.Pod:
 		objectMeta = object.ObjectMeta
 	case *batchV1.Job:
 		objectMeta = object.ObjectMeta
-	case *apiV1.PersistentVolume:
+	case *coreV1.PersistentVolume:
 		objectMeta = object.ObjectMeta
-	case *apiV1.Namespace:
+	case *coreV1.Namespace:
 		objectMeta = object.ObjectMeta
-	case *apiV1.Secret:
+	case *coreV1.ConfigMap:
+		objectMeta = object.ObjectMeta
+	case *coreV1.Secret:
 		objectMeta = object.ObjectMeta
 	case *extV1beta1.Ingress:
+		objectMeta = object.ObjectMeta
+	case *coreV1.ServiceAccount:
+		objectMeta = object.ObjectMeta
+	case *rbacV1.ClusterRole:
 		objectMeta = object.ObjectMeta
 	}
 	return objectMeta
 }
 
-// add a change to the processing queue
-func addToQueue(queue workqueue.RateLimitingInterface, change Change, err error) {
-	if err == nil {
-		logrus.Tracef("Queueing %s change for %s %s.", change.changeType, strings.ToUpper(change.objectType), change.key)
-		queue.Add(change)
-	} else {
-		logrus.Errorf("Error adding %s change for %s %s to processing queue.", change.changeType, strings.ToUpper(change.objectType), change.key)
+// returns a watch interface for the specified resource type (e.g. pod)
+func newWatch(client kubernetes.Interface, options metaV1.ListOptions, resourceType string) (watch.Interface, error) {
+	switch resourceType {
+	case "configmap":
+		return client.CoreV1().ConfigMaps(metaV1.NamespaceAll).Watch(options)
+	case "daemonset":
+		return client.ExtensionsV1beta1().DaemonSets(metaV1.NamespaceAll).Watch(options)
+	case "deployment":
+		return client.AppsV1beta1().Deployments(metaV1.NamespaceAll).Watch(options)
+	case "namespace":
+		return client.CoreV1().Namespaces().Watch(options)
+	case "ingress":
+		return client.ExtensionsV1beta1().Ingresses(metaV1.NamespaceAll).Watch(options)
+	case "job":
+		return client.BatchV1().Jobs(metaV1.NamespaceAll).Watch(options)
+	case "persistent_volume":
+		return client.CoreV1().PersistentVolumes().Watch(options)
+	case "pod":
+		return client.CoreV1().Pods(metaV1.NamespaceAll).Watch(options)
+	case "replicaset":
+		return client.ExtensionsV1beta1().ReplicaSets(metaV1.NamespaceAll).Watch(options)
+	case "replication_controller":
+		return client.CoreV1().ReplicationControllers(metaV1.NamespaceAll).Watch(options)
+	case "secret":
+		return client.CoreV1().Secrets(metaV1.NamespaceAll).Watch(options)
+	case "service":
+		return client.CoreV1().Services(metaV1.NamespaceAll).Watch(options)
+	case "service_account":
+		return client.CoreV1().ServiceAccounts(metaV1.NamespaceAll).Watch(options)
+	case "cluster_role":
+		return client.RbacV1().ClusterRoles().Watch(options)
+	default:
+		return nil, nil
 	}
+}
+
+// returns a list (runtime object) for the specified resource type (e.g. pod)
+func newList(client kubernetes.Interface, options metaV1.ListOptions, resourceType string) (runtime.Object, error) {
+	switch resourceType {
+	case "configmap":
+		return client.CoreV1().ConfigMaps(metaV1.NamespaceAll).List(options)
+	case "daemonset":
+		return client.ExtensionsV1beta1().DaemonSets(metaV1.NamespaceAll).List(options)
+	case "deployment":
+		return client.AppsV1beta1().Deployments(metaV1.NamespaceAll).List(options)
+	case "namespace":
+		return client.CoreV1().Namespaces().List(options)
+	case "ingress":
+		return client.ExtensionsV1beta1().Ingresses(metaV1.NamespaceAll).List(options)
+	case "job":
+		return client.BatchV1().Jobs(metaV1.NamespaceAll).List(options)
+	case "persistent_volume":
+		return client.CoreV1().PersistentVolumes().List(options)
+	case "pod":
+		return client.CoreV1().Pods(metaV1.NamespaceAll).List(options)
+	case "replicaset":
+		return client.ExtensionsV1beta1().ReplicaSets(metaV1.NamespaceAll).List(options)
+	case "replication_controller":
+		return client.CoreV1().ReplicationControllers(metaV1.NamespaceAll).List(options)
+	case "secret":
+		return client.CoreV1().Secrets(metaV1.NamespaceAll).List(options)
+	case "service":
+		return client.CoreV1().Services(metaV1.NamespaceAll).List(options)
+	case "service_account":
+		return client.CoreV1().ServiceAccounts(metaV1.NamespaceAll).List(options)
+	case "cluster_role":
+		return client.RbacV1().ClusterRoles().List(options)
+	default:
+		return nil, nil
+	}
+}
+
+// creates a random string of the specified length
+func randString(strLen int) string {
+	bytes := make([]byte, strLen)
+	for i := 0; i < strLen; i++ {
+		// 65 - 90: range of characters to use in the random string
+		bytes[i] = byte(randInt(65, 90))
+	}
+	return string(bytes)
+}
+
+// gets a random integer
+func randInt(min int, max int) int {
+	return min + rand.Intn(max-min)
 }

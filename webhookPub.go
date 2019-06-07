@@ -24,10 +24,12 @@ type WebhookPub struct {
 	uri            string
 	authentication string
 	token          string
+	log            *logrus.Entry
 }
 
 // gets the configuration for the publisher
-func (pub *WebhookPub) Init(c *Config) {
+func (pub *WebhookPub) Init(c *Config, log *logrus.Entry) {
+	pub.log = log
 	pub.uri = c.Publishers.Webhook.URI
 	pub.authentication = c.Publishers.Webhook.Authentication
 	if pub.authentication == "basic" {
@@ -40,18 +42,21 @@ func (pub *WebhookPub) Init(c *Config) {
 	}
 }
 
-func (pub *WebhookPub) OnCreate(change Change, obj interface{}) {
-	pub.notify(change)
+func (pub *WebhookPub) OnCreate(event Event) {
+	pub.notify(event)
 }
 
-func (pub *WebhookPub) OnDelete(change Change, obj interface{}) {
-	pub.notify(change)
+func (pub *WebhookPub) OnDelete(event Event) {
+	pub.notify(event)
 }
 
-func (pub *WebhookPub) OnUpdate(change Change, obj interface{}) {
-	pub.notify(change)
+func (pub *WebhookPub) OnUpdate(event Event) {
+	pub.notify(event)
 }
 
-func (pub *WebhookPub) notify(change Change) {
-	logrus.Warnf("WEBHOOK PUBLISHER NOT IMPLEMENTED! Trying to publish change %s for object %s\n", change.changeType, change.objectType)
+func (pub *WebhookPub) notify(event Event) {
+	pub.log.Warnf(
+		"WEBHOOK PUBLISHER NOT IMPLEMENTED! Trying to publish change %s for object %s\n",
+		event.Info.EventType,
+		event.Info.ObjectType)
 }

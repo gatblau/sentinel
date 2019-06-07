@@ -33,36 +33,41 @@ type Watcher struct {
 	queue     workqueue.RateLimitingInterface
 	informer  cache.SharedIndexInformer
 	publisher Publisher
+	log       *logrus.Entry
+	platform  string
 }
 
 // creates a new controller to watch for changes in status of a specific resource
-func newWatcher(informer cache.SharedIndexInformer, objType string, publisher Publisher) *Watcher {
-	logrus.Tracef("Creating %s watcher.", strings.ToUpper(objType))
+func newWatcher(informer cache.SharedIndexInformer, objType string, s Sentinel) *Watcher {
+	s.log.Tracef("Creating %s watcher.", strings.ToUpper(objType))
 	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
 	var change Change
 	var err error
 
 	informer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
-			change.key, err = cache.MetaNamespaceKeyFunc(obj)
-			change.changeType = "CREATE"
-			change.objectType = objType
-			change.namespace = getMetaData(obj).Namespace
-			addToQueue(queue, change, err)
+			change.ObjectId, err = cache.MetaNamespaceKeyFunc(obj)
+			change.EventType = "CREATE"
+			change.ObjectType = objType
+			change.Namespace = getMetaData(obj).Namespace
+			change.Time = time.Now().UTC()
+			addToQueue(queue, change, err, s.log)
 		},
 		UpdateFunc: func(obj, new interface{}) {
-			change.key, err = cache.MetaNamespaceKeyFunc(obj)
-			change.changeType = "UPDATE"
-			change.objectType = objType
-			change.namespace = getMetaData(obj).Namespace
-			addToQueue(queue, change, err)
+			change.ObjectId, err = cache.MetaNamespaceKeyFunc(obj)
+			change.EventType = "UPDATE"
+			change.ObjectType = objType
+			change.Namespace = getMetaData(obj).Namespace
+			change.Time = time.Now().UTC()
+			addToQueue(queue, change, err, s.log)
 		},
 		DeleteFunc: func(obj interface{}) {
-			change.key, err = cache.DeletionHandlingMetaNamespaceKeyFunc(obj)
-			change.changeType = "DELETE"
-			change.objectType = objType
-			change.namespace = getMetaData(obj).Namespace
-			addToQueue(queue, change, err)
+			change.ObjectId, err = cache.DeletionHandlingMetaNamespaceKeyFunc(obj)
+			change.EventType = "DELETE"
+			change.ObjectType = objType
+			change.Namespace = getMetaData(obj).Namespace
+			change.Time = time.Now().UTC()
+			addToQueue(queue, change, err, s.log)
 		},
 	})
 
@@ -70,7 +75,9 @@ func newWatcher(informer cache.SharedIndexInformer, objType string, publisher Pu
 		objType:   objType,
 		informer:  informer,
 		queue:     queue,
-		publisher: publisher,
+		publisher: s.publisher,
+		log:       s.log,
+		platform:  s.config.Platform,
 	}
 }
 
@@ -87,7 +94,7 @@ func (w *Watcher) run() {
 	// shut downs the queue when it is time
 	defer w.queue.ShutDown()
 
-	logrus.Tracef("%s watcher starting.", strings.ToUpper(w.objType))
+	w.log.Tracef("%s watcher starting.", strings.ToUpper(w.objType))
 	startTime = time.Now().Local()
 
 	// starts and runs the shared informer
@@ -100,7 +107,7 @@ func (w *Watcher) run() {
 		return
 	}
 
-	logrus.Tracef("%s watcher synchronised and ready.", strings.ToUpper(w.objType))
+	w.log.Tracef("%s watcher synchronised and ready.", strings.ToUpper(w.objType))
 
 	// loops until the stop channel is closed, running the worker every second
 	wait.Until(w.processQueue, time.Second, stopCh)
@@ -120,7 +127,7 @@ func (w *Watcher) nextItem() bool {
 
 	// if queue shuts down then quit
 	if shutdown {
-		logrus.Tracef("%s queue has shut down.", strings.ToUpper(w.objType))
+		w.log.Tracef("%s queue has shut down.", strings.ToUpper(w.objType))
 		return false
 	}
 
@@ -142,34 +149,47 @@ func (w *Watcher) nextItem() bool {
 
 // publish the state change
 func (w *Watcher) publish(change Change) error {
-	logrus.Tracef("Ready to publish %s changes for %s %s.", change.changeType, strings.ToUpper(change.objectType), change.key)
-	obj, exists, err := w.informer.GetIndexer().GetByKey(change.key)
+	w.log.Tracef("Ready to publish %s changes for %s %s.", change.EventType, strings.ToUpper(change.ObjectType), change.ObjectId)
+	obj, exists, err := w.informer.GetIndexer().GetByKey(change.ObjectId)
 	if !exists {
-		logrus.Tracef("%s %s does not exist anymore.", strings.ToUpper(change.objectType), change.key)
+		w.log.Tracef("%s %s does not exist anymore.", strings.ToUpper(change.ObjectType), change.ObjectId)
 	}
 	if err != nil {
-		return fmt.Errorf("Failed to retrieve object with key %s: %s", change.key, err)
+		return fmt.Errorf("Failed to retrieve object with key %s: %s", change.ObjectId, err)
 	} else {
 		// get object metadata
 		meta := getMetaData(obj)
 
 		// publish events based on its type
-		switch change.changeType {
+		switch change.EventType {
 		case "CREATE":
 			// compare CreationTimestamp and serverStartTime and alert only on latest events
 			// Could be Replaced by using Delta or DeltaFIFO
 			if meta.CreationTimestamp.Sub(startTime).Seconds() > 0 {
-				logrus.Tracef("Calling Publisher.OnCreate(change -> %+v).", change)
-				w.publisher.OnCreate(change, meta)
+				w.log.Tracef("Calling Publisher.OnCreate(change -> %+v).", change)
+				w.publisher.OnCreate(
+					Event{
+						Platform: w.platform,
+						Info:     change,
+						Meta:     meta,
+					})
 				return nil
 			}
 		case "UPDATE":
-			logrus.Tracef("Calling Publisher.OnUpdate(change -> %+v).", change)
-			w.publisher.OnUpdate(change, meta)
+			w.log.Tracef("Calling Publisher.OnUpdate(change -> %+v).", change)
+			w.publisher.OnUpdate(Event{
+				Platform: w.platform,
+				Info:     change,
+				Meta:     meta,
+			})
 			return nil
 		case "DELETE":
-			logrus.Tracef("Calling Publisher.OnDelete(change -> %+v).", change)
-			w.publisher.OnDelete(change, meta)
+			w.log.Tracef("Calling Publisher.OnDelete(change -> %+v).", change)
+			w.publisher.OnDelete(Event{
+				Platform: w.platform,
+				Info:     change,
+				Meta:     meta,
+			})
 			return nil
 		}
 	}
@@ -183,13 +203,13 @@ func (w *Watcher) handleResult(err error, key interface{}) {
 		// indicates that the item is finished being retried.
 		// it doesn't matter whether it's for permanent failing or for success,
 		// it stops the rate limiter from tracking it.
-		logrus.Tracef("Change for %s has been processed.", key.(Change).key)
+		w.log.Tracef("Change for %s has been processed.", key.(Change).ObjectId)
 		w.queue.Forget(key)
 		return
 	} else if w.queue.NumRequeues(key) < maxRetries {
 		// this controller retries a specified number of times if something goes wrong
 		// after which, stops trying
-		logrus.Errorf("Error processing %s (will retry): %s.", key.(Change).key, err)
+		w.log.Errorf("Error processing %s (will retry): %s.", key.(Change).ObjectId, err)
 
 		// re-queue the key rate limited. Based on the rate limiter on the
 		// queue and the re-enqueue history, the key will be processed later again.
@@ -205,9 +225,19 @@ func (w *Watcher) handleResult(err error, key interface{}) {
 
 		// logs the error
 		if err != nil {
-			logrus.Errorf("Error processing %s (giving up): %s.", key.(Change).key, err)
+			w.log.Errorf("Error processing %s (giving up): %s.", key.(Change).ObjectId, err)
 		} else {
-			logrus.Errorf("Error processing %s: too many retries, giving up!", key.(Change).key)
+			w.log.Errorf("Error processing %s: too many retries, giving up!", key.(Change).ObjectId)
 		}
+	}
+}
+
+// add a change to the processing queue
+func addToQueue(queue workqueue.RateLimitingInterface, change Change, err error, log *logrus.Entry) {
+	if err == nil {
+		log.Tracef("Queueing %s change for %s %s.", change.EventType, strings.ToUpper(change.ObjectType), change.ObjectId)
+		queue.Add(change)
+	} else {
+		log.Errorf("Error adding %s change for %s %s to processing queue.", change.EventType, strings.ToUpper(change.ObjectType), change.ObjectId)
 	}
 }

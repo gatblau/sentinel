@@ -14,20 +14,26 @@
 */
 package main
 
+import (
+	"github.com/sirupsen/logrus"
+	"time"
+)
+
 // the interface implemented by a object state change publisher
 type Publisher interface {
-	Init(c *Config)
-	OnCreate(change Change, obj interface{})
-	OnDelete(change Change, obj interface{})
-	OnUpdate(change Change, obj interface{})
+	Init(c *Config, log *logrus.Entry)
+	OnCreate(event Event)
+	OnDelete(event Event)
+	OnUpdate(event Event)
 }
 
 // the metadata for a K8S object change
 type Change struct {
-	key        string
-	changeType string
-	namespace  string
-	objectType string
+	ObjectId   string    `json:"objectId"`
+	EventType  string    `json:"eventType"`
+	Namespace  string    `json:"namespace"`
+	ObjectType string    `json:"objectType"`
+	Time       time.Time `json:"time"`
 }
 
 // Represent an event got from k8s api server
@@ -41,4 +47,11 @@ type PublishedEvent struct {
 	Reason    string
 	Status    string
 	Name      string
+}
+
+// represent published event
+type Event struct {
+	Platform string
+	Info     Change
+	Meta     interface{}
 }

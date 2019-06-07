@@ -20,23 +20,28 @@ import (
 
 // logs events to kafka
 type BrokerPub struct {
+	log *logrus.Entry
 }
 
-func (pub *BrokerPub) Init(c *Config) {
+func (pub *BrokerPub) Init(c *Config, log *logrus.Entry) {
+	pub.log = log
 }
 
-func (pub *BrokerPub) OnCreate(change Change, obj interface{}) {
-	pub.notify(change)
+func (pub *BrokerPub) OnCreate(event Event) {
+	pub.notify(event)
 }
 
-func (pub *BrokerPub) OnDelete(change Change, obj interface{}) {
-	pub.notify(change)
+func (pub *BrokerPub) OnDelete(event Event) {
+	pub.notify(event)
 }
 
-func (pub *BrokerPub) OnUpdate(change Change, obj interface{}) {
-	pub.notify(change)
+func (pub *BrokerPub) OnUpdate(event Event) {
+	pub.notify(event)
 }
 
-func (pub *BrokerPub) notify(change Change) {
-	logrus.Warnf("BROKER PUBLISHER NOT IMPLEMENTED! Trying to publish change %s for object %s\n", change.changeType, change.objectType)
+func (pub *BrokerPub) notify(event Event) {
+	pub.log.Warnf(
+		"BROKER PUBLISHER NOT IMPLEMENTED! Trying to publish change %s for object %s\n",
+		event.Info.EventType,
+		event.Info.ObjectType)
 }

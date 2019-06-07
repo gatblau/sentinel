@@ -55,7 +55,7 @@ The available environment variables are described below.
 
 | File Var | Environment Var | Description | Default |
 |---|---|---|---|
-| Publishers.Logger.Output| SL_PUBLISHERS_LOGGER_OUTPUT | whether to log to the standard output (stdout) or to the file system (file) | stdout |
+| Publishers.Logger.OutputTo | SL_PUBLISHERS_LOGGER_OUTPUTTO | whether to log to the standard output (stdout) or to the file system (file) | stdout |
 | Publishers.Logger.LogFolder| SL_PUBLISHERS_LOGGER_LOGFOLDER | the path to the log folder, only required if Output = "file" | logs |
 
 ### _Webhook Publisher Variables_
@@ -94,6 +94,8 @@ The available environment variables are described below.
 | Observe.Secret | SL_OBSERVE_SECRET | whether to observe create, update and delete secret events | false |
 | Observe.ConfigMap | SL_OBSERVE_CONFIGMAP | whether to observe create, update and delete config map events | false |
 | Observe.Ingress | SL_OBSERVE_INGRESS | whether to observe create, update and delete ingress events | false |
+| Observe.ServiceAccount | SL_OBSERVE_SERVICEACCOUNT | whether to observe create, update and delete service account events | false |
+| Observe.ClusterRole | SL_OBSERVE_CLUSTERROLE | whether to observe create, update and delete cluster role events | false |
 
 
 

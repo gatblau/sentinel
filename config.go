@@ -23,16 +23,24 @@ import (
 // Sentinel configuration
 type Config struct {
 	KubeConfig string
-	LoginLevel string
+	LogLevel   string
 	Publishers Publishers
 	Observe    Observe
+	Platform   string
 }
 
 // the configuration for the event publishers
 type Publishers struct {
 	Publisher string
+	Logger    Logger
 	Webhook   Webhook
 	Broker    Broker
+}
+
+// the configuration for the logger publisher
+type Logger struct {
+	OutputTo  string
+	LogFolder string
 }
 
 // the configuration for the web hook publisher
@@ -68,6 +76,8 @@ type Observe struct {
 	Secret                bool
 	ConfigMap             bool
 	Ingress               bool
+	ServiceAccount        bool
+	ClusterRole           bool
 }
 
 // creates a new configuration file passed by value
@@ -91,8 +101,11 @@ func NewConfig() (Config, error) {
 	// replace character to support environment variable format
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	_ = v.BindEnv("KubeConfig")
-	_ = v.BindEnv("LoginLevel")
+	_ = v.BindEnv("LogLevel")
+	_ = v.BindEnv("Platform")
 	_ = v.BindEnv("Publishers.Publisher")
+	_ = v.BindEnv("Publishers.Logger.OutputTo")
+	_ = v.BindEnv("Publishers.Logger.LogFolder")
 	_ = v.BindEnv("Publishers.Webhook.URI")
 	_ = v.BindEnv("Publishers.Webhook.Authentication")
 	_ = v.BindEnv("Publishers.Webhook.Username")
@@ -101,7 +114,7 @@ func NewConfig() (Config, error) {
 	_ = v.BindEnv("Publishers.Broker.Brokers")
 	_ = v.BindEnv("Publishers.Broker.Verbose")
 	_ = v.BindEnv("Publishers.Broker.Certificate")
-	_ = v.BindEnv("Publishers.Broker.Key")
+	_ = v.BindEnv("Publishers.Broker.ObjectId")
 	_ = v.BindEnv("Publishers.Broker.CA")
 	_ = v.BindEnv("Publishers.Broker.Verify")
 	_ = v.BindEnv("Observe.Service")
@@ -116,16 +129,23 @@ func NewConfig() (Config, error) {
 	_ = v.BindEnv("Observe.Secret")
 	_ = v.BindEnv("Observe.ConfigMap")
 	_ = v.BindEnv("Observe.Ingress")
+	_ = v.BindEnv("Observe.ServiceAccount")
+	_ = v.BindEnv("Observe.ClusterRole")
 
 	// creates a config struct and populate it with values
 	c := new(Config)
 
 	// general configuration
 	c.KubeConfig = v.GetString("KubeConfig")
-	c.LoginLevel = v.GetString("LoginLevel")
+	c.LogLevel = v.GetString("LogLevel")
+	c.Platform = v.GetString("Platform")
 
 	// publishers configuration
 	c.Publishers.Publisher = v.GetString("Publishers.Publisher")
+
+	// logger publisher configuration
+	c.Publishers.Logger.OutputTo = v.GetString("Publishers.Logger.OutputTo")
+	c.Publishers.Logger.LogFolder = v.GetString("Publishers.Logger.LogFolder")
 
 	// webhook publisher configuration
 	c.Publishers.Webhook.URI = v.GetString("Publishers.Webhook.URI")
@@ -137,7 +157,7 @@ func NewConfig() (Config, error) {
 	c.Publishers.Broker.Addr = v.GetString("Publishers.Broker.Addr")
 	c.Publishers.Broker.Brokers = v.GetString("Publishers.Broker.Brokers")
 	c.Publishers.Broker.Certificate = v.GetString("Publishers.Broker.Certificate")
-	c.Publishers.Broker.Key = v.GetString("Publishers.Broker.Key")
+	c.Publishers.Broker.Key = v.GetString("Publishers.Broker.ObjectId")
 	c.Publishers.Broker.CA = v.GetString("Publishers.Broker.CA")
 	c.Publishers.Broker.Verbose = v.GetBool("Publishers.Broker.Verbose")
 	c.Publishers.Broker.Verify = v.GetBool("Publishers.Broker.Verify")
@@ -155,6 +175,8 @@ func NewConfig() (Config, error) {
 	c.Observe.ReplicaSet = v.GetBool("Observe.ReplicaSet")
 	c.Observe.ReplicationController = v.GetBool("Observe.ReplicationController")
 	c.Observe.Secret = v.GetBool("Observe.Secret")
+	c.Observe.ServiceAccount = v.GetBool("Observe.ServiceAccount")
+	c.Observe.ClusterRole = v.GetBool("Observe.ClusterRole")
 
 	// return configuration as value to avoid thread issues
 	// note: does not refresh after config has been loaded though

@@ -17,12 +17,18 @@ package main
 import (
 	"fmt"
 	"github.com/sirupsen/logrus"
-	apiV1 "k8s.io/api/core/v1"
+	appsV1 "k8s.io/api/apps/v1"
+	batchV1 "k8s.io/api/batch/v1"
+	coreV1 "k8s.io/api/core/v1"
+	extV1beta1 "k8s.io/api/extensions/v1beta1"
+	rbacV1 "k8s.io/api/rbac/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
+	"k8s.io/client-go/tools/clientcmd"
 	"os"
 	"os/signal"
 	"strings"
@@ -39,6 +45,7 @@ type Sentinel struct {
 	client    kubernetes.Interface
 	config    *Config
 	publisher Publisher
+	log       *logrus.Entry
 }
 
 // starts observing for K8S resource changes
@@ -51,15 +58,21 @@ func (s *Sentinel) Start() error {
 		return err
 	}
 
+	// adds the platform field to the logger
+	s.log = logrus.WithFields(logrus.Fields{
+		"platform": s.config.Platform,
+	})
+
 	// try and parse the logging level in the configuration
-	level, err := logrus.ParseLevel(c.LoginLevel)
+	level, err := logrus.ParseLevel(c.LogLevel)
 	if err != nil {
 		// if the value was not recognised then return the error
+		s.log.Errorf("Failed to recognise value LogLevel entry in the configuration: %s.", err)
 		return err
 	}
 	// otherwise sets the logging level for the entire system
 	logrus.SetLevel(level)
-	logrus.Infof("%s has been set as the logger level.", strings.ToUpper(c.LoginLevel))
+	s.log.Infof("%s has been set as the logger level.", strings.ToUpper(c.LogLevel))
 
 	// registers the publisher used by Sentinel
 	s.publisher, err = s.getPublisher()
@@ -68,23 +81,23 @@ func (s *Sentinel) Start() error {
 		// if the resolution of the publisher failed then return the error
 		return err
 	} else {
-		logrus.Infof("%s publisher has been registered.", strings.ToUpper(s.config.Publishers.Publisher))
+		s.log.Infof("%s publisher has been registered.", strings.ToUpper(s.config.Publishers.Publisher))
 	}
 
 	// gets a k8s client
-	client, err := getKubeClient()
+	client, err := s.getKubeClient()
 
 	if err != nil {
 		// if the creation of the k8s client failed then return the error
 		return err
 	} else {
-		logrus.Infof("Kubernetes client created.")
+		s.log.Infof("Kubernetes client created.")
 	}
 
 	// launch the required controllers to listen to object state changes
 	s.startWatchers(client)
 
-	logrus.Infof("Sentinel ready and looking out for changes.")
+	s.log.Infof("Sentinel ready and looking out for changes.")
 
 	// waits until a SIGINT or SIGTERM signal is raised
 	// creates a channel to pass kernel signals to terminate the main process
@@ -102,17 +115,47 @@ func (s *Sentinel) Start() error {
 
 // launch k8s controllers to listen to object state changes
 func (s *Sentinel) startWatchers(client kubernetes.Interface) {
-	if s.config.Observe.Pod {
-		s.startWatcher(client, &apiV1.Pod{}, "pod")
+	if s.config.Observe.Service {
+		s.startWatcher(client, &coreV1.Service{}, "service")
 	}
-	if s.config.Observe.Namespace {
-		s.startWatcher(client, &apiV1.Namespace{}, "namespace")
+	if s.config.Observe.Pod {
+		s.startWatcher(client, &coreV1.Pod{}, "pod")
 	}
 	if s.config.Observe.PersistentVolume {
-		s.startWatcher(client, &apiV1.PersistentVolume{}, "persistent_volume")
+		s.startWatcher(client, &coreV1.PersistentVolume{}, "persistent_volume")
 	}
-	if s.config.Observe.Service {
-		s.startWatcher(client, &apiV1.Service{}, "service")
+	if s.config.Observe.Namespace {
+		s.startWatcher(client, &coreV1.Namespace{}, "namespace")
+	}
+	if s.config.Observe.Deployment {
+		s.startWatcher(client, &appsV1.Deployment{}, "deployment")
+	}
+	if s.config.Observe.ReplicationController {
+		s.startWatcher(client, &coreV1.ReplicationController{}, "replication_controller")
+	}
+	if s.config.Observe.ReplicaSet {
+		s.startWatcher(client, &appsV1.ReplicaSet{}, "replicaset")
+	}
+	if s.config.Observe.Deployment {
+		s.startWatcher(client, &extV1beta1.DaemonSet{}, "daemonset")
+	}
+	if s.config.Observe.Job {
+		s.startWatcher(client, &batchV1.Job{}, "job")
+	}
+	if s.config.Observe.Secret {
+		s.startWatcher(client, &coreV1.Secret{}, "secret")
+	}
+	if s.config.Observe.ConfigMap {
+		s.startWatcher(client, &coreV1.ConfigMap{}, "configmap")
+	}
+	if s.config.Observe.Ingress {
+		s.startWatcher(client, &extV1beta1.Ingress{}, "ingress")
+	}
+	if s.config.Observe.ServiceAccount {
+		s.startWatcher(client, &coreV1.ServiceAccount{}, "service_account")
+	}
+	if s.config.Observe.ClusterRole {
+		s.startWatcher(client, &rbacV1.ClusterRole{}, "cluster_role")
 	}
 }
 
@@ -124,10 +167,10 @@ func (s *Sentinel) startWatcher(client kubernetes.Interface, objType runtime.Obj
 		// the controller wants to list and watch all pods in all namespaces
 		&cache.ListWatch{
 			ListFunc: func(options metaV1.ListOptions) (runtime.Object, error) {
-				return s.newList(client, options, resourceType)
+				return newList(client, options, resourceType)
 			},
 			WatchFunc: func(options metaV1.ListOptions) (watch.Interface, error) {
-				return s.newWatch(client, options, resourceType)
+				return newWatch(client, options, resourceType)
 			},
 		},
 		objType,
@@ -136,74 +179,10 @@ func (s *Sentinel) startWatcher(client kubernetes.Interface, objType runtime.Obj
 	)
 
 	// creates a new controller to handle object status changes
-	watcher := newWatcher(informer, resourceType, s.publisher)
+	watcher := newWatcher(informer, resourceType, *s)
 
 	// run the controller
 	go watcher.run()
-}
-
-// returns a watch interface for the specified resource type (e.g. pod)
-func (s *Sentinel) newWatch(client kubernetes.Interface, options metaV1.ListOptions, resourceType string) (watch.Interface, error) {
-	switch resourceType {
-	case "configmap":
-		return client.CoreV1().ConfigMaps(metaV1.NamespaceAll).Watch(options)
-	case "daemonset":
-		return client.ExtensionsV1beta1().DaemonSets(metaV1.NamespaceAll).Watch(options)
-	case "deployment":
-		return client.AppsV1beta1().Deployments(metaV1.NamespaceAll).Watch(options)
-	case "namespace":
-		return client.CoreV1().Namespaces().Watch(options)
-	case "ingress":
-		return client.ExtensionsV1beta1().Ingresses(metaV1.NamespaceAll).Watch(options)
-	case "job":
-		return client.BatchV1().Jobs(metaV1.NamespaceAll).Watch(options)
-	case "persistent_volume":
-		return client.CoreV1().PersistentVolumes().Watch(options)
-	case "pod":
-		return client.CoreV1().Pods(metaV1.NamespaceAll).Watch(options)
-	case "replicaset":
-		return client.ExtensionsV1beta1().ReplicaSets(metaV1.NamespaceAll).Watch(options)
-	case "replication_controller":
-		return client.CoreV1().ReplicationControllers(metaV1.NamespaceAll).Watch(options)
-	case "secret":
-		return client.CoreV1().Secrets(metaV1.NamespaceAll).Watch(options)
-	case "service":
-		return client.CoreV1().Services(metaV1.NamespaceAll).Watch(options)
-	default:
-		return nil, nil
-	}
-}
-
-// returns a list (runtime object) for the specified resource type (e.g. pod)
-func (s *Sentinel) newList(client kubernetes.Interface, options metaV1.ListOptions, resourceType string) (runtime.Object, error) {
-	switch resourceType {
-	case "configmap":
-		return client.CoreV1().ConfigMaps(metaV1.NamespaceAll).List(options)
-	case "daemonset":
-		return client.ExtensionsV1beta1().DaemonSets(metaV1.NamespaceAll).List(options)
-	case "deployment":
-		return client.AppsV1beta1().Deployments(metaV1.NamespaceAll).List(options)
-	case "namespace":
-		return client.CoreV1().Namespaces().List(options)
-	case "ingress":
-		return client.ExtensionsV1beta1().Ingresses(metaV1.NamespaceAll).List(options)
-	case "job":
-		return client.BatchV1().Jobs(metaV1.NamespaceAll).List(options)
-	case "persistent_volume":
-		return client.CoreV1().PersistentVolumes().List(options)
-	case "pod":
-		return client.CoreV1().Pods(metaV1.NamespaceAll).List(options)
-	case "replicaset":
-		return client.ExtensionsV1beta1().ReplicaSets(metaV1.NamespaceAll).List(options)
-	case "replication_controller":
-		return client.CoreV1().ReplicationControllers(metaV1.NamespaceAll).List(options)
-	case "secret":
-		return client.CoreV1().Secrets(metaV1.NamespaceAll).List(options)
-	case "service":
-		return client.CoreV1().Services(metaV1.NamespaceAll).List(options)
-	default:
-		return nil, nil
-	}
 }
 
 // gets the publisher specified in the configuration
@@ -221,6 +200,55 @@ func (s *Sentinel) getPublisher() (Publisher, error) {
 			"Failed to register a publisher: the value '%s' in the configuration could not be recognised.",
 			s.config.Publishers.Publisher)
 	}
-	pub.Init(s.config)
+	pub.Init(s.config, s.log)
 	return pub, nil
+}
+
+// gets an instance of the k8s client
+func (s *Sentinel) getKubeClient() (kubernetes.Interface, error) {
+	config, err := s.getKubeConfig()
+	if err != nil {
+		return nil, err
+	}
+	client, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		s.log.Fatalf("Can not create kubernetes client: %v.", err)
+		return nil, err
+	}
+	return client, nil
+}
+
+// gets the K8S client configuration either inside or outside of the cluster depending on
+// whether the kube config file could be found
+func (s *Sentinel) getKubeConfig() (*rest.Config, error) {
+	// k8s client configuration
+	var config *rest.Config
+
+	// gets the path to the kube config file
+	kubeConfigFile := fmt.Sprintf("%s/%s", os.Getenv("HOME"), s.config.KubeConfig)
+
+	if _, err := os.Stat(kubeConfigFile); err == nil {
+		s.log.Info("Kube config file found: attempting out of cluster configuration.")
+		// if the kube config file exists then do an outside of cluster configuration
+		config, err = clientcmd.BuildConfigFromFlags("", kubeConfigFile)
+		if err != nil {
+			s.log.Errorf("Could not create out of cluster configuration: %v.", err)
+			return nil, err
+		}
+	} else if os.IsNotExist(err) {
+		s.log.Info("Kube config file not found: attempting in cluster configuration.")
+		// the kube config file was not found then do in cluster configuration
+		config, err = rest.InClusterConfig()
+		if err != nil {
+			s.log.Errorf("Could not create in cluster configuration: %v.", err)
+			return nil, err
+		}
+	} else {
+		// kube config might be there or not but it failed anyway :(
+		if err != nil {
+			s.log.Errorf("Could not figure out the Kube client configuration: %v.", err)
+			return nil, err
+		}
+	}
+	return config, nil
 }

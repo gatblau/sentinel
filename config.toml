@@ -1,9 +1,12 @@
 # Sentinel configuration file
-# the default path to the kube config file for out of cluster configuration
-KubeConfig = "~/.kube/config"
+# the default relative path to the kube config file for out of cluster configuration
+# the relative path should start from os.Getenv("HOME") - e.g. ~/.kube/config
+KubeConfig = ".kube/config"
 # sets the login level
-LoginLevel = "Info"
-# number of retries before controller
+LogLevel = "Trace"
+# the platform the sentinel is observing.
+# update the value below with an identifier for the target platform.
+Platform = "kube-01"
 
 [Publishers]
     # defines which publisher to use (i.e. webhook, broker, logger)
@@ -12,7 +15,7 @@ LoginLevel = "Info"
     # logger publisher configuration
     [Publishers.Logger]
     # whether the logger writes to "stdout" or "file"
-    Output = "stdout"
+    OutputTo = "file"
     # the path to the log folder, only required if Output = "file"
     LogFolder = "logs"
 
@@ -56,3 +59,5 @@ Job = false
 Secret = false
 ConfigMap = false
 Ingress = false
+ServiceAccount = false
+ClusterRole = false
