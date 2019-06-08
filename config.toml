@@ -3,7 +3,7 @@
 # the relative path should start from os.Getenv("HOME") - e.g. ~/.kube/config
 KubeConfig = ".kube/config"
 # sets the login level
-LogLevel = "Info"
+LogLevel = "Trace"
 # the platform the sentinel is observing.
 # update the value below with an identifier for the target platform.
 Platform = "kube-01"
@@ -15,7 +15,7 @@ Platform = "kube-01"
     # logger publisher configuration
     [Publishers.Logger]
     # whether the logger writes to "stdout" or "file"
-    OutputTo = "file"
+    OutputTo = "stdout"
     # the path to the log folder, only required if Output = "file"
     LogFolder = "logs"
 
