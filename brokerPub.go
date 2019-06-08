@@ -27,21 +27,9 @@ func (pub *BrokerPub) Init(c *Config, log *logrus.Entry) {
 	pub.log = log
 }
 
-func (pub *BrokerPub) OnCreate(event Event) {
-	pub.notify(event)
-}
-
-func (pub *BrokerPub) OnDelete(event Event) {
-	pub.notify(event)
-}
-
-func (pub *BrokerPub) OnUpdate(event Event) {
-	pub.notify(event)
-}
-
-func (pub *BrokerPub) notify(event Event) {
+func (pub *BrokerPub) Publish(event Event) {
 	pub.log.Warnf(
 		"BROKER PUBLISHER NOT IMPLEMENTED! Trying to publish change %s for object %s\n",
-		event.Info.EventType,
-		event.Info.ObjectType)
+		event.Change.Type,
+		event.Change.Kind)
 }

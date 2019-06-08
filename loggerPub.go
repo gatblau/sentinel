@@ -54,19 +54,7 @@ func (pub *LoggerPub) Init(config *Config, log *logrus.Entry) {
 	}
 }
 
-func (pub *LoggerPub) OnCreate(event Event) {
-	pub.notify(event)
-}
-
-func (pub *LoggerPub) OnDelete(event Event) {
-	pub.notify(event)
-}
-
-func (pub *LoggerPub) OnUpdate(event Event) {
-	pub.notify(event)
-}
-
-func (pub *LoggerPub) notify(event Event) {
+func (pub *LoggerPub) Publish(event Event) {
 	// if it can log to file (i.e. specified and out of cluster)
 	if pub.logToFile {
 		// write log entry to the file system
@@ -77,9 +65,9 @@ func (pub *LoggerPub) notify(event Event) {
 			pub.log.Errorf("Publisher could not marshal object to json: %s.", err)
 		} else {
 			pub.log.Infof("%s %s %s: %s",
-				strings.ToUpper(event.Info.ObjectType),
-				event.Info.ObjectId,
-				event.Info.EventType,
+				strings.ToUpper(event.Change.Kind),
+				event.Change.key,
+				event.Change.Type,
 				string(objBytes))
 		}
 	}
@@ -87,33 +75,32 @@ func (pub *LoggerPub) notify(event Event) {
 
 // writes the change to the file system
 func (pub *LoggerPub) writeToFile(event Event) {
-	filename := fmt.Sprintf("%s%s", pub.path, pub.getNextName(event.Info))
-	err := ioutil.WriteFile(filename, pub.toJSON(event), os.ModePerm)
+	filename := fmt.Sprintf("%s%s", pub.path, pub.getNextName(event.Change))
+	jsonBytes, err := toJSON(event)
 	if err != nil {
+		// if the serialisation failed the log the error
+		pub.log.Errorf("Failed to marshall object: %s", err)
+		// and puts the error info in the message to written to the log
+		jsonBytes = []byte(fmt.Sprintf("Failed to marshall object: %s", err))
+	}
+	pub.log.Tracef("Writing file %s.", filename)
+	// dumps the content of the event into a newly created log file
+	err = ioutil.WriteFile(filename, jsonBytes, os.ModePerm)
+	if err != nil {
+		// if the dump failed then log the error
 		pub.log.Errorf("Failed to write to file %s: %s.", filename, err)
 	}
 }
 
 // gets the next incremental number
-func (pub *LoggerPub) getNextName(c Change) string {
+func (pub *LoggerPub) getNextName(c StatusChange) string {
 	return strings.Replace(
 		fmt.Sprintf("%s_%s_%s_%s.json",
 			strconv.FormatInt(int64(time.Now().UTC().UnixNano()), 10),
-			c.ObjectType,
-			c.EventType,
-			c.ObjectId),
+			c.Kind,
+			c.Type,
+			c.Name),
 		"/",
 		"_",
 		-1)
-}
-
-// converts the specified object into a pretty looking JSON string
-func (pub *LoggerPub) toJSON(obj interface{}) []byte {
-	// serialises the object into JSON applying indentation to format the output
-	jsonBytes, err := json.MarshalIndent(obj, "", "  ")
-	if err != nil {
-		pub.log.Errorf("Failed to marshall object: %s", err)
-		return []byte(fmt.Sprintf("Publisher failed to marshall object: %s.", err))
-	}
-	return jsonBytes
 }

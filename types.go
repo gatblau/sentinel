@@ -21,37 +21,28 @@ import (
 
 // the interface implemented by a object state change publisher
 type Publisher interface {
+	// initialises the publisher passing the sentinel configuration and logger
 	Init(c *Config, log *logrus.Entry)
-	OnCreate(event Event)
-	OnDelete(event Event)
-	OnUpdate(event Event)
+
+	// publish the event
+	Publish(event Event)
 }
 
-// the metadata for a K8S object change
-type Change struct {
-	ObjectId   string    `json:"objectId"`
-	EventType  string    `json:"eventType"`
-	Namespace  string    `json:"namespace"`
-	ObjectType string    `json:"objectType"`
-	Time       time.Time `json:"time"`
-}
-
-// Represent an event got from k8s api server
-// Events from different endpoints need to be casted to KubewatchEvent
-// before being able to be handled by Handler
-type PublishedEvent struct {
-	Namespace string
-	Kind      string
-	Component string
-	Host      string
-	Reason    string
-	Status    string
-	Name      string
-}
-
-// represent published event
+// represent the event sent by the publisher
 type Event struct {
-	Platform string
-	Info     Change
-	Meta     interface{}
+	// information about the status change
+	Change StatusChange
+	// the metadata of the k8s object that changed
+	Meta interface{}
+}
+
+// information about the K8S object status change
+type StatusChange struct {
+	key       string    `json:"key"`
+	Name      string    `json:"name"`
+	Type      string    `json:"type"`
+	Namespace string    `json:"namespace"`
+	Kind      string    `json:"kind"`
+	Time      time.Time `json:"time"`
+	Host      string    `json:"host"`
 }

@@ -12,6 +12,10 @@ The following image shows how the application works:
 <img src="./pics/arc.png" align="center" height="350" width="350"/>
 </div>
 
+## Getting Started
+
+Follow the [guide here](./docs/getting_started.md) to get started.
+
 ## API compatibility
 
 The current version uses the [Kubernetes API 1.11.10](https://github.com/kubernetes/api/releases/tag/kubernetes-1.11.10), compatible with Openshift 3.11.
