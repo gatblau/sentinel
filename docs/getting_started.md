@@ -48,7 +48,8 @@ kubectl: Correctly Configured: pointing to minikube-vm at 192.168.99.100
 # check the content of the sentinel configuration
 less config.toml
 
-# NOTE that the configuration uses files instructs Sentinel to use the Logger publisher by default to create log files under the ./logs folder.
+# NOTE that the configuration file instructs Sentinel to use
+# the Logger publisher by default to create log files under the ./logs folder.
 
 # now you can run sentinel
 ./sentinel
