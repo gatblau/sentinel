@@ -15,6 +15,8 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
 	appsV1 "k8s.io/api/apps/v1"
 	batchV1 "k8s.io/api/batch/v1"
 	coreV1 "k8s.io/api/core/v1"
@@ -71,7 +73,7 @@ func newWatch(client kubernetes.Interface, options metaV1.ListOptions, resourceT
 	case "daemonset":
 		return client.ExtensionsV1beta1().DaemonSets(metaV1.NamespaceAll).Watch(options)
 	case "deployment":
-		return client.AppsV1beta1().Deployments(metaV1.NamespaceAll).Watch(options)
+		return client.AppsV1().Deployments(metaV1.NamespaceAll).Watch(options)
 	case "namespace":
 		return client.CoreV1().Namespaces().Watch(options)
 	case "ingress":
@@ -148,4 +150,14 @@ func randString(strLen int) string {
 // gets a random integer
 func randInt(min int, max int) int {
 	return min + rand.Intn(max-min)
+}
+
+// converts the specified object into a pretty looking JSON string
+func toJSON(obj interface{}) ([]byte, error) {
+	// serialises the object into JSON applying indentation to format the output
+	jsonBytes, err := json.MarshalIndent(obj, "", "  ")
+	if err != nil {
+		return nil, fmt.Errorf("Failed to marshall object: %s", err)
+	}
+	return jsonBytes, nil
 }

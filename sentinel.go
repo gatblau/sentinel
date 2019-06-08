@@ -97,7 +97,7 @@ func (s *Sentinel) Start() error {
 	// launch the required controllers to listen to object state changes
 	s.startWatchers(client)
 
-	s.log.Infof("Sentinel ready and looking out for changes.")
+	s.log.Infof("Sentinel is ready and looking out for changes.")
 
 	// waits until a SIGINT or SIGTERM signal is raised
 	// creates a channel to pass kernel signals to terminate the main process

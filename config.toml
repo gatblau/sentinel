@@ -3,7 +3,7 @@
 # the relative path should start from os.Getenv("HOME") - e.g. ~/.kube/config
 KubeConfig = ".kube/config"
 # sets the login level
-LogLevel = "Trace"
+LogLevel = "Info"
 # the platform the sentinel is observing.
 # update the value below with an identifier for the target platform.
 Platform = "kube-01"
@@ -47,11 +47,11 @@ Platform = "kube-01"
 
 # kubernetes objects to observe
 [Observe]
-Service = false
+Service = true
 Pod = true
-PersistentVolume = false
-Namespace = false
-Deployment = false
+PersistentVolume = true
+Namespace = true
+Deployment = true
 ReplicationController = false
 ReplicaSet = false
 DaemonSet = false

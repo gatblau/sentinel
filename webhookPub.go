@@ -42,21 +42,9 @@ func (pub *WebhookPub) Init(c *Config, log *logrus.Entry) {
 	}
 }
 
-func (pub *WebhookPub) OnCreate(event Event) {
-	pub.notify(event)
-}
-
-func (pub *WebhookPub) OnDelete(event Event) {
-	pub.notify(event)
-}
-
-func (pub *WebhookPub) OnUpdate(event Event) {
-	pub.notify(event)
-}
-
-func (pub *WebhookPub) notify(event Event) {
+func (pub *WebhookPub) Publish(event Event) {
 	pub.log.Warnf(
 		"WEBHOOK PUBLISHER NOT IMPLEMENTED! Trying to publish change %s for object %s\n",
-		event.Info.EventType,
-		event.Info.ObjectType)
+		event.Change.Type,
+		event.Change.Kind)
 }
