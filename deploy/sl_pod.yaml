@@ -1,0 +1,22 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: sentinel
+  namespace: default
+spec:
+  serviceAccountName: sentinel
+  containers:
+    - image: gatblau/sentinel:v0.0.1
+      imagePullPolicy: Always
+      name: sentinel
+      volumeMounts:
+        - name: config-volume
+          mountPath: /app/config.toml
+          subPath: config.toml
+  restartPolicy: Always
+  volumes:
+    - name: config-volume
+      configMap:
+        name: sentinel
+...

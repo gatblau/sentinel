@@ -240,7 +240,9 @@ func (s *Sentinel) getKubeConfig() (*rest.Config, error) {
 		// the kube config file was not found then do in cluster configuration
 		config, err = rest.InClusterConfig()
 		if err != nil {
-			s.log.Errorf("Could not create in cluster configuration: %v.", err)
+			s.log.Errorf("Could not find the K8S client configuration. "+
+				"Are you running Sentinel in a container that has not been deployed in Kubernetes?.\n "+
+				"The error message was: %v.", err)
 			return nil, err
 		}
 	} else {

@@ -84,6 +84,7 @@ func newWatcher(informer cache.SharedIndexInformer, objType string, s Sentinel) 
 		queue:     queue,
 		publisher: s.publisher,
 		log:       s.log,
+		objType:   objType,
 	}
 }
 
