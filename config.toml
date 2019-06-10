@@ -14,50 +14,49 @@ Platform = "kube-01"
 
     # logger publisher configuration
     [Publishers.Logger]
-    # whether the logger writes to "stdout" or "file"
-    OutputTo = "stdout"
-    # the path to the log folder, only required if Output = "file"
-    LogFolder = "logs"
+        # whether the logger writes to "stdout" or "file"
+        OutputTo = "file"
+        # the path to the log folder, only required if Output = "file"
+        LogFolder = "logs"
 
-    # web hook publisher configuration
-    [Publishers.Webhook]
-    # the uri of the webhook
-    URI = "http://localhost:8080"
-    # authentication mode to use (i.e. none, basic)
-    Authentication = "none"
-    # the optional username for basic authentication
-    Username = "sentinel"
-    # the optional password for basic authentication
-    Password = "s3nt1n3l"
+    # web hook publishers configuration
+    # repeat the block below if you need to add more than one hook
+    [[Publishers.Webhook]]
+        # the uri of the webhook
+        URI = "http://localhost:8000"
+        # authentication mode to use (i.e. none, basic)
+        Authentication = "none"
+        # the optional username for basic authentication
+        Username = "sentinel"
+        # the optional password for basic authentication
+        Password = "s3nt1n3l"
 
     # message broker publisher configuration
     [Publishers.Broker]
-    # the address to bind to
-    Addr = ":8080"
-    # The Kafka brokers to connect to, as a comma separated list
-    Brokers = ""
-    # optional certificate file for client authentication
-    Certificate = ""
-    # optional key file for client authentication
-    Key = ""
-    # optional certificate authority file for TLS client authentication
-    CA = ""
-    # optional verify ssl certificates chain
-    Verify = false
+        # The Kafka brokers to connect to, as a comma separated list
+        Brokers = "localhost:9092"
+        # optional certificate file for client authentication
+        Certificate = ""
+        # optional key file for client authentication
+        Key = ""
+        # optional certificate authority file for TLS client authentication
+        CA = ""
+        # optional verify ssl certificates chain
+        Verify = false
 
 # kubernetes objects to observe
 [Observe]
-Service = true
-Pod = true
-PersistentVolume = true
-Namespace = true
-Deployment = true
-ReplicationController = false
-ReplicaSet = false
-DaemonSet = false
-Job = false
-Secret = false
-ConfigMap = false
-Ingress = false
-ServiceAccount = false
-ClusterRole = false
+    Service = true
+    Pod = true
+    PersistentVolume = true
+    Namespace = true
+    Deployment = true
+    ReplicationController = false
+    ReplicaSet = false
+    DaemonSet = false
+    Job = false
+    Secret = false
+    ConfigMap = false
+    Ingress = false
+    ServiceAccount = false
+    ClusterRole = false

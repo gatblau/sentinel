@@ -177,7 +177,7 @@ func (w *Watcher) publish(change StatusChange) error {
 				w.publisher.Publish(
 					Event{
 						Change: change,
-						Meta:   meta,
+						Object: obj,
 					})
 				return nil
 			}
@@ -185,14 +185,14 @@ func (w *Watcher) publish(change StatusChange) error {
 			w.log.Tracef("Calling Publisher.OnUpdate(change -> %+v).", change)
 			w.publisher.Publish(Event{
 				Change: change,
-				Meta:   meta,
+				Object: obj,
 			})
 			return nil
 		case "DELETE":
 			w.log.Tracef("Calling Publisher.OnDelete(change -> %+v).", change)
 			w.publisher.Publish(Event{
 				Change: change,
-				Meta:   meta,
+				Object: obj,
 			})
 			return nil
 		}
