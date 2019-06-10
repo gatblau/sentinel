@@ -1,3 +1,5 @@
+<img src="./../pics/sentinel_small.png" align="right" height="200" width="200"/>
+
 # Getting Started
 
 The easiest way to getting started is to deploy Sentinel from a container image in [minikube](https://github.com/kubernetes/minikube).
@@ -19,3 +21,15 @@ To deploy Sentinel from the container image into K8S [see here](./k8s_deploy.md)
 ## Trying the binary out in the local machine
 
 If you want to try it out on your local machine [see here](./binary_deploy.md)
+
+## Publishing to a webhook
+
+In order to publish to a web hook, update the Sentinel configuration file to use the webhook publisher. Set the URI of the publisher to the address the web consumer application is listening to.
+
+Start up a web consumer application where the web hook is pointing to, [such as the one here](../consumer/web_consumer.py).
+
+Run the sentinel process.
+
+Deploy an application on minikube and see the changes appearing on the web consumer application terminal.
+
+[*] _The Sentinel icon was made by [Freepik](https://www.freepik.com) from [Flaticon](https://www.flaticon.com) and is licensed by [Creative Commons BY 3.0](http://creativecommons.org/licenses/by/3.0)_

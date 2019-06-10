@@ -15,8 +15,10 @@
 package main
 
 import (
+	"fmt"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	"os"
 	"strings"
 )
 
@@ -33,7 +35,7 @@ type Config struct {
 type Publishers struct {
 	Publisher string
 	Logger    Logger
-	Webhook   Webhook
+	Webhook   []Webhook
 	Broker    Broker
 }
 
@@ -106,10 +108,10 @@ func NewConfig() (Config, error) {
 	_ = v.BindEnv("Publishers.Publisher")
 	_ = v.BindEnv("Publishers.Logger.OutputTo")
 	_ = v.BindEnv("Publishers.Logger.LogFolder")
-	_ = v.BindEnv("Publishers.Webhook.URI")
-	_ = v.BindEnv("Publishers.Webhook.Authentication")
-	_ = v.BindEnv("Publishers.Webhook.Username")
-	_ = v.BindEnv("Publishers.Webhook.Password")
+	//_ = v.BindEnv("Publishers.Webhook.URI")
+	//_ = v.BindEnv("Publishers.Webhook.Authentication")
+	//_ = v.BindEnv("Publishers.Webhook.Username")
+	//_ = v.BindEnv("Publishers.Webhook.Password")
 	_ = v.BindEnv("Publishers.Broker.Addr")
 	_ = v.BindEnv("Publishers.Broker.Brokers")
 	_ = v.BindEnv("Publishers.Broker.Verbose")
@@ -147,11 +149,41 @@ func NewConfig() (Config, error) {
 	c.Publishers.Logger.OutputTo = v.GetString("Publishers.Logger.OutputTo")
 	c.Publishers.Logger.LogFolder = v.GetString("Publishers.Logger.LogFolder")
 
-	// webhook publisher configuration
-	c.Publishers.Webhook.URI = v.GetString("Publishers.Webhook.URI")
-	c.Publishers.Webhook.Authentication = v.GetString("Publishers.Webhook.Authentication")
-	c.Publishers.Webhook.Username = v.GetString("Publishers.Webhook.Username")
-	c.Publishers.Webhook.Password = v.GetString("Publishers.Webhook.Password")
+	// webhook publisher configuration - loads array of tables in TOML
+	// load all configured webhooks
+	hooks := v.Get("Publishers.Webhook")
+	if hooks != nil {
+		whs := hooks.([]interface{})
+		c.Publishers.Webhook = make([]Webhook, len(whs))
+		for i := 0; i < len(whs); i++ {
+			wh := whs[i].(map[string]interface{})
+			h := Webhook{
+				URI:            wh["URI"].(string),
+				Username:       wh["Username"].(string),
+				Password:       wh["Password"].(string),
+				Authentication: wh["Authentication"].(string)}
+			// have to do ad-hoc binding of the array as Viper currently does not support
+			// binding of TOML Array of Tables now try and bind any env variable following
+			// the format PUBLISHERS_WEBHOOK_N_URI, etc where N is the array index
+			value := os.Getenv(fmt.Sprintf("PUBLISHERS_WEBHOOK_%s_URI", i))
+			if len(value) > 0 {
+				h.URI = value
+			}
+			value = os.Getenv(fmt.Sprintf("PUBLISHERS_WEBHOOK_%s_USERNAME", i))
+			if len(value) > 0 {
+				h.Username = value
+			}
+			value = os.Getenv(fmt.Sprintf("PUBLISHERS_WEBHOOK_%s_PASSWORD", i))
+			if len(value) > 0 {
+				h.Password = value
+			}
+			value = os.Getenv(fmt.Sprintf("PUBLISHERS_WEBHOOK_%s_AUTHENTICATION", i))
+			if len(value) > 0 {
+				h.Authentication = value
+			}
+			c.Publishers.Webhook[i] = h
+		}
+	}
 
 	// broker publisher configuration
 	c.Publishers.Broker.Addr = v.GetString("Publishers.Broker.Addr")

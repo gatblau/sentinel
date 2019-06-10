@@ -32,8 +32,8 @@ type Publisher interface {
 type Event struct {
 	// information about the status change
 	Change StatusChange
-	// the metadata of the k8s object that changed
-	Meta interface{}
+	// the k8s object that changed
+	Object interface{}
 }
 
 // information about the K8S object status change

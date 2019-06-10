@@ -15,6 +15,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	appsV1 "k8s.io/api/apps/v1"
@@ -160,4 +161,20 @@ func toJSON(obj interface{}) ([]byte, error) {
 		return nil, fmt.Errorf("Failed to marshall object: %s", err)
 	}
 	return jsonBytes, nil
+}
+
+// gets a byte reader from a specified object
+func getJSONBytesReader(data interface{}) (*bytes.Reader, error) {
+	jsonBytes, err := json.Marshal(data)
+	return bytes.NewReader(jsonBytes), err
+}
+
+// checks if the specified string value is contained in the passed-in slice
+func contains(slic []string, value string) bool {
+	for _, element := range slic {
+		if element == value {
+			return true
+		}
+	}
+	return false
 }
