@@ -73,8 +73,6 @@ func (pub *BrokerPub) Publish(event Event) {
 
 // creates a new async message producer
 func newProducer(brokerList []string, certFile *string, keyFile *string, caFile *string, verifySsl *bool, log logrus.Entry) s.AsyncProducer {
-	// For the access log, we are looking for AP semantics, with high throughput.
-	// By creating batches of compressed messages, we reduce network I/O at a cost of more latency.
 	config := s.NewConfig()
 
 	// create a tls configuration if input parameters are provided
