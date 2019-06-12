@@ -1,4 +1,4 @@
-module gatblau.org/sentinel
+module sentinel.gatblau.org
 
 go 1.12
 

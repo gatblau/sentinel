@@ -17,6 +17,7 @@ package main
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"fmt"
 	s "github.com/Shopify/sarama"
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
@@ -58,10 +59,16 @@ func (pub *BrokerPub) Init(c *Config, log *logrus.Entry) {
 func (pub *BrokerPub) Publish(event Event) {
 	// converts the event to json
 	bytes, err := toJSON(event)
-	if err != nil {
-		// creates the producer message
+	if err == nil {
+		// creates the producer keyed message so that Kafka sends
+		// all messages of the same key to the same partition to guarantee
+		// ordered delivery of messages in this case, within a single k8s cluster and namespace
 		message := &s.ProducerMessage{
-			Topic: event.Change.Kind,
+			// message is keyed using the kubernetes cluster:namespace combination
+			Key: s.StringEncoder(fmt.Sprintf("%s:%s", event.Change.Host, event.Change.Namespace)),
+			// a single topic for all
+			Topic: "k8s",
+			// the message payload
 			Value: s.StringEncoder(string(bytes))}
 
 		// sends the message
@@ -73,16 +80,19 @@ func (pub *BrokerPub) Publish(event Event) {
 
 // creates a new async message producer
 func newProducer(brokerList []string, certFile *string, keyFile *string, caFile *string, verifySsl *bool, log logrus.Entry) s.AsyncProducer {
+	// gets a new configuration with reasonable defaults
 	config := s.NewConfig()
 
 	// create a tls configuration if input parameters are provided
 	tlsConfig := createTlsConfiguration(certFile, keyFile, caFile, verifySsl)
+
 	// if there is a configuration
 	if tlsConfig != nil {
 		config.Net.TLS.Enable = true
 		config.Net.TLS.Config = tlsConfig
 	}
-	// only waits for the local commit to succeed before responding
+	// the producer will wait for an acknowledgement from the leader only
+	// ack 1 -> middle ground between ack 0 and ack all
 	config.Producer.RequiredAcks = s.WaitForLocal
 
 	// compresses messages

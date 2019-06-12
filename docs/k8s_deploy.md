@@ -2,7 +2,7 @@
 
 In order to run Sentinel in Kubernetes, it is necessary to create a cluster role that contains the rules granting it access to the API objects that need watching.
 
-The script [sl_rbac.yaml](../deploy/sl_rbac.yaml) creates a **resource_watcher** cluster wide role, a **sentinel** service account and assigns the privileges in the role to the service account using a role binding.
+The script [sl_rbac.yaml](../scripts/kube/sl_rbac.yaml) creates a **resource_watcher** cluster wide role, a **sentinel** service account and assigns the privileges in the role to the service account using a role binding.
 
 To apply the above configuration:
 
@@ -11,7 +11,7 @@ To apply the above configuration:
 kubectl create -f ./deploy/sl_rbac.yaml
 ```
 
-Now that the service account has the required privileges, you might want to overlay a different [config.toml](../config.toml) configuration file. In this case, a config map like the one shown [here](../deploy/sl_config_map.yaml) can be used.
+Now that the service account has the required privileges, you might want to overlay a different [config.toml](../config.toml) configuration file. In this case, a config map like the one shown [here](../scripts/kube/sl_config_map.yaml) can be used.
 
 If you want to create a config map from a file do the following:
 
@@ -23,7 +23,7 @@ kubectl create configmap sentinel --from-file=config.toml
 kubectl get configmaps sentinel -o yaml
 ```
 
-or otherwise, load the map [here](../deploy/sl_config_map.yaml):
+or otherwise, load the map [here](../scripts/kube/sl_config_map.yaml):
 
 ```bash
 # load config map from yaml file

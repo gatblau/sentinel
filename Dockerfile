@@ -18,8 +18,7 @@
 FROM golang as builder
 WORKDIR /app
 COPY . .
-RUN go get .
-RUN CGO_ENABLED=0 GOOS=linux go build -o sentinel .
+RUN go get . && CGO_ENABLED=0 GOOS=linux go build -o sentinel .
 
 # package stage: copy the binary into the deployment image
 FROM scratch

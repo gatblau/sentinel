@@ -20,13 +20,23 @@ To deploy Sentinel from the container image into K8S [see here](./k8s_deploy.md)
 
 ## Trying the binary out in the local machine
 
-If you want to try it out on your local machine [see here](./binary_deploy.md)
+If you want to try it out on your local machine [see here](./binary_deploy.md).
 
 ## Publishing to a webhook
 
 In order to publish to a web hook, update the Sentinel configuration file to use the webhook publisher. Set the URI of the publisher to the address the web consumer application is listening to.
 
-Start up a web consumer application where the web hook is pointing to, [such as the one here](../consumer/web_consumer.py).
+Start up a web consumer application where the web hook is pointing to, [such as the one here](../scripts/webhook/readme.md).
+
+Run the sentinel process.
+
+Deploy an application on minikube and see the changes appearing on the web consumer application terminal.
+
+## Publishing to Kafka
+
+In order to publish to Kafka, update the Sentinel configuration file to use the broker publisher. Set the Brokers list of the publisher to a comma separated list of one or more addresses the message broker is listening to.
+
+Start up a Kafka message broker. See [here](../scripts/kafka/readme.md) for information on how to set up a development copy.
 
 Run the sentinel process.
 

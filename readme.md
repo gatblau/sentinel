@@ -19,6 +19,7 @@ The following image shows how the application works:
 | [Getting Started](./docs/getting_started.md) | Various examples of how to get started using Sentinel. |
 | [Configuration](./docs/configuration.md) | How to change Sentinel behaviour using configuration variables. |
 | [Publishers](./docs/publishers.md) | A description of the various mechanisms to publish status changes to other systems. |
+| [Scripts](./scripts/readme.md) | Various scripts to facilitate development and testing. |
 
 ## API compatibility
 

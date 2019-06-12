@@ -34,6 +34,8 @@ Variables within each TOML table, are mapped to environment variables using indi
 |__SL_PUBLISHERS_WEBHOOK_1_URI__| 1 | URI of the first endpoint |
 |__SL_PUBLISHERS_WEBHOOK_2_URI__| 2 | URI of the second endpoint |
 
+__NOTE__: if the intention is to use environment veariables to configure multiple webhooks, then as many [[webhook]] tables need to be created in the config.toml file as web hooks are required to set in envoronment variables. This is because the binding of environment variables to cingif file variables is based on the number of [[webhook]] tables in the config.toml file.
+
 The following table shows all configuration variables available to the webhook publisher:
 
 | File Var | Environment Var | Description | Default |
