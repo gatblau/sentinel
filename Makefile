@@ -25,6 +25,9 @@ IMG_VER = v0.0.1
 # the name of the folder where the packaged binaries will be placed after the build
 BUILD_FOLDER=build
 
+# get old images that are left without a name from new image builds (i.e. dangling images)
+DANGLING_IMS = $(shell docker images -f dangling=true -q)
+
 # build the Sentinel binary in the current platform
 build:
 	$(GO_CMD) fmt
@@ -32,11 +35,11 @@ build:
 
 # build the Sentinel docker image
 docker-image:
-	@docker build -t gatblau/$(BINARY_NAME):$(IMG_VER) .
+	docker build -t gatblau/$(BINARY_NAME):$(IMG_VER) .
 
-# deletes images with no tag
+# deletes dangling images
 docker-clean:
-	@docker rmi $(docker images -f dangling=true -q)
+	docker rmi $(DANGLING_IMS)
 
 # package the terraform provider for all platforms
 package:

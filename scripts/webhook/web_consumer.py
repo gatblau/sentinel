@@ -20,8 +20,8 @@ except ImportError:
     # if failed then go for the python 2 compatible import
     from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
 
-# This is an example of a very simple web consumer for the Sentinel Webhook publisher
-# This consumer outputs the payload sent by Sentinel to the std out
+# This is an example of a very simple web scripts for the Sentinel Webhook publisher
+# This scripts outputs the payload sent by Sentinel to the std out
 # Use for testing purposes only
 class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
 
@@ -29,7 +29,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
         self.end_headers()
-        self.wfile.write(b'Web consumer is waiting for Sentinel post requests!')
+        self.wfile.write(b'Web scripts is waiting for Sentinel post requests!')
 
     # process post requests writing the body to the std output
     def do_POST(self):
