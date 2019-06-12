@@ -22,7 +22,11 @@ The webhook publisher performs an http post to one or more target endpoints and 
 
 ## Broker
 
-The broker publisher publishes the event into Apache Kafka.
+The broker publisher publishes the event messages into an Apache Kafka message broker.
+
+The broker has a single topic called __k8s__ and the messages sent are to the broker keyed on __platform:namespace__ combination to ensure that messages from the same namespace are delivered to the message consumer in order.
+
+An example of how to get started with Kafka can be seen [here](./getting_started.md).
 
 ### Multi Cluster publishing with Kafka
 
