@@ -20,7 +20,7 @@ BINARY_NAME=sentinel
 GO_CMD = go
 
 # the version of the container image to build
-IMG_VER = v0.0.1
+IMG_VER = v0.0.2
 
 # the name of the folder where the packaged binaries will be placed after the build
 BUILD_FOLDER=build
