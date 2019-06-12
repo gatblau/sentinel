@@ -1,4 +1,4 @@
-<img src="./pics/sentinel_small.png" align="right" height="200" width="200"/>
+<img src="../../pics/sentinel_small.png" align="right" height="200" width="200"/>
 
 # Kafka development environment
 
