@@ -64,7 +64,7 @@ The following table shows all configuration variables available to the webhook p
 | Observe.PersistentVolume | SL_OBSERVE_PERSISTENTVOLUME | whether to observe create, update and delete persistent volume events | true |
 | Observe.Namespace | SL_OBSERVE_NAMESPACE | whether to observe create, update and delete namespace events | true |
 | Observe.Deployment | SL_OBSERVE_DEPLOYMENT | whether to observe create, update and delete deployment events | false |
-| Observe.ReplicationController | SL_OBSERVE_REPLICATIONCONTROLLER | whether to observe create, update and delete replication controller events | false |
+| Observe.ReplicationController | SL_OBSERVE_REPLICATIONCONTROLLER | whether to observe create, update and delete replication controller events | true |
 | Observe.ReplicateSet | SL_OBSERVE_REPLICASET | whether to observe create, update and delete replica set events | false |
 | Observe.DaemonSet | SL_OBSERVE_DAEMONSET | whether to observe create, update and delete daemon set events | false |
 | Observe.Job | SL_OBSERVE_JOB | whether to observe create, update and delete job events | false |
@@ -73,6 +73,8 @@ The following table shows all configuration variables available to the webhook p
 | Observe.Ingress | SL_OBSERVE_INGRESS | whether to observe create, update and delete ingress events | false |
 | Observe.ServiceAccount | SL_OBSERVE_SERVICEACCOUNT | whether to observe create, update and delete service account events | false |
 | Observe.ClusterRole | SL_OBSERVE_CLUSTERROLE | whether to observe create, update and delete cluster role events | false |
+| Observe.ResourceQuota | SL_OBSERVE_RESOURCEQUOTA | whether to observe create, update and delete resource quota events | true |
+| Observe.NetworkPolicy | SL_OBSERVE_NETWORKPOLICY | whether to observe create, update and delete network policy events | false |
 
 
 [*] _The Sentinel icon was made by [Freepik](https://www.freepik.com) from [Flaticon](https://www.flaticon.com) and is licensed by [Creative Commons BY 3.0](http://creativecommons.org/licenses/by/3.0)_
