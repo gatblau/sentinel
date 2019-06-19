@@ -22,6 +22,7 @@ import (
 	batchV1 "k8s.io/api/batch/v1"
 	coreV1 "k8s.io/api/core/v1"
 	extV1beta1 "k8s.io/api/extensions/v1beta1"
+	netV1 "k8s.io/api/networking/v1"
 	rbacV1 "k8s.io/api/rbac/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -62,6 +63,10 @@ func getMetaData(obj interface{}) metaV1.ObjectMeta {
 		objectMeta = object.ObjectMeta
 	case *rbacV1.ClusterRole:
 		objectMeta = object.ObjectMeta
+	case *coreV1.ResourceQuota:
+		objectMeta = object.ObjectMeta
+	case *netV1.NetworkPolicy:
+		objectMeta = object.ObjectMeta
 	}
 	return objectMeta
 }
@@ -97,6 +102,10 @@ func newWatch(client kubernetes.Interface, options metaV1.ListOptions, resourceT
 		return client.CoreV1().ServiceAccounts(metaV1.NamespaceAll).Watch(options)
 	case "cluster_role":
 		return client.RbacV1().ClusterRoles().Watch(options)
+	case "resource_quota":
+		return client.CoreV1().ResourceQuotas(metaV1.NamespaceAll).Watch(options)
+	case "network_policy":
+		return client.NetworkingV1().NetworkPolicies(metaV1.NamespaceAll).Watch(options)
 	default:
 		return nil, nil
 	}
@@ -133,6 +142,10 @@ func newList(client kubernetes.Interface, options metaV1.ListOptions, resourceTy
 		return client.CoreV1().ServiceAccounts(metaV1.NamespaceAll).List(options)
 	case "cluster_role":
 		return client.RbacV1().ClusterRoles().List(options)
+	case "resource_quota":
+		return client.CoreV1().ResourceQuotas(metaV1.NamespaceAll).List(options)
+	case "network_policy":
+		return client.NetworkingV1().NetworkPolicies(metaV1.NamespaceAll).List(options)
 	default:
 		return nil, nil
 	}

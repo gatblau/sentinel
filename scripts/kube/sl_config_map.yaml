@@ -66,3 +66,5 @@ data:
         Ingress = false
         ServiceAccount = false
         ClusterRole = false
+        ResourceQuota = true
+        NetworkPolicy = false

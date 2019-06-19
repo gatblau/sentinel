@@ -179,7 +179,8 @@ func (w *Watcher) publish(change StatusChange) error {
 						Change: change,
 						Object: obj,
 					})
-				return nil
+			} else {
+				w.log.Tracef("Change occurred %s before starting Sentinel, so not calling publisher.", meta.CreationTimestamp.Sub(startTime))
 			}
 		case "UPDATE":
 			w.log.Tracef("Calling Publisher.OnUpdate(change -> %+v).", change)

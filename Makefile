@@ -31,7 +31,7 @@ DANGLING_IMS = $(shell docker images -f dangling=true -q)
 # build the Sentinel binary in the current platform
 build:
 	$(GO_CMD) fmt
-	export GOROOT=/usr/local/go; export GOPATH=$HOME/go; $(GO_CMD) build -o $(BINARY_NAME) -v
+	export GOROOT=/usr/local/go; export GOPATH=$(HOME)/go; $(GO_CMD) build -o $(BINARY_NAME) -v
 
 # build the Sentinel docker image
 docker-image:
