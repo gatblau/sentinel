@@ -51,6 +51,8 @@ func getMetaData(obj interface{}) metaV1.ObjectMeta {
 		objectMeta = object.ObjectMeta
 	case *coreV1.PersistentVolume:
 		objectMeta = object.ObjectMeta
+	case *coreV1.PersistentVolumeClaim:
+		objectMeta = object.ObjectMeta
 	case *coreV1.Namespace:
 		objectMeta = object.ObjectMeta
 	case *coreV1.ConfigMap:
@@ -88,6 +90,8 @@ func newWatch(client kubernetes.Interface, options metaV1.ListOptions, resourceT
 		return client.BatchV1().Jobs(metaV1.NamespaceAll).Watch(options)
 	case "persistent_volume":
 		return client.CoreV1().PersistentVolumes().Watch(options)
+	case "persistent_volume_claim":
+		return client.CoreV1().PersistentVolumeClaims(metaV1.NamespaceAll).Watch(options)
 	case "pod":
 		return client.CoreV1().Pods(metaV1.NamespaceAll).Watch(options)
 	case "replicaset":
@@ -128,6 +132,8 @@ func newList(client kubernetes.Interface, options metaV1.ListOptions, resourceTy
 		return client.BatchV1().Jobs(metaV1.NamespaceAll).List(options)
 	case "persistent_volume":
 		return client.CoreV1().PersistentVolumes().List(options)
+	case "persistent_volume_claim":
+		return client.CoreV1().PersistentVolumeClaims(metaV1.NamespaceAll).List(options)
 	case "pod":
 		return client.CoreV1().Pods(metaV1.NamespaceAll).List(options)
 	case "replicaset":

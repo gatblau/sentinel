@@ -49,6 +49,7 @@ Platform = "kube-01"
     Service = true
     Pod = true
     PersistentVolume = true
+    PersistentVolumeClaim = true
     Namespace = true
     Deployment = false
     ReplicationController = true

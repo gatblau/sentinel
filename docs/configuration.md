@@ -62,6 +62,7 @@ The following table shows all configuration variables available to the webhook p
 | Observe.Service | SL_OBSERVE_SERVICE | whether to observe create, update and delete service events | true |
 | Observe.Pod | SL_OBSERVE_POD | whether to observe create, update and delete pod events | true |
 | Observe.PersistentVolume | SL_OBSERVE_PERSISTENTVOLUME | whether to observe create, update and delete persistent volume events | true |
+| Observe.PersistentVolumeClaim | SL_OBSERVE_PERSISTENTVOLUMECLAIM | whether to observe create, update and delete persistent volume claim events | true |
 | Observe.Namespace | SL_OBSERVE_NAMESPACE | whether to observe create, update and delete namespace events | true |
 | Observe.Deployment | SL_OBSERVE_DEPLOYMENT | whether to observe create, update and delete deployment events | false |
 | Observe.ReplicationController | SL_OBSERVE_REPLICATIONCONTROLLER | whether to observe create, update and delete replication controller events | true |

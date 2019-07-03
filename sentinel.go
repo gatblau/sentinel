@@ -128,6 +128,9 @@ func (s *Sentinel) startWatchers(client kubernetes.Interface) {
 	if s.config.Observe.PersistentVolume {
 		s.startWatcher(client, &coreV1.PersistentVolume{}, "persistent_volume")
 	}
+	if s.config.Observe.PersistentVolumeClaim {
+		s.startWatcher(client, &coreV1.PersistentVolumeClaim{}, "persistent_volume_claim")
+	}
 	if s.config.Observe.Namespace {
 		s.startWatcher(client, &coreV1.Namespace{}, "namespace")
 	}
@@ -140,7 +143,7 @@ func (s *Sentinel) startWatchers(client kubernetes.Interface) {
 	if s.config.Observe.ReplicaSet {
 		s.startWatcher(client, &appsV1.ReplicaSet{}, "replicaset")
 	}
-	if s.config.Observe.Deployment {
+	if s.config.Observe.DaemonSet {
 		s.startWatcher(client, &extV1beta1.DaemonSet{}, "daemonset")
 	}
 	if s.config.Observe.Job {
