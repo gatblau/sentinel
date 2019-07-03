@@ -12,6 +12,8 @@
 #    Contributors to this project, hereby assign copyright in this code to the project,
 #    to be licensed under the same terms as the rest of the code.
 #
+# the name of the container registry repository
+REPO_NAME=gatblau
 
 # the name of the Sentinel binary file
 BINARY_NAME=sentinel
@@ -19,8 +21,8 @@ BINARY_NAME=sentinel
 # the name of the go command to use to build the binary
 GO_CMD = go
 
-# the version of the container image to build
-IMG_VER = v0.0.1
+# the version of the application
+APP_VER = v0.0.2
 
 # the name of the folder where the packaged binaries will be placed after the build
 BUILD_FOLDER=build
@@ -31,17 +33,29 @@ DANGLING_IMS = $(shell docker images -f dangling=true -q)
 # build the Sentinel binary in the current platform
 build:
 	$(GO_CMD) fmt
-	export GOROOT=/usr/local/go; export GOPATH=$(HOME)/go; $(GO_CMD) build -o $(BINARY_NAME) -v
+	export GOROOT=/usr/local/go; export GOPATH=$HOME/go; $(GO_CMD) build -o $(BINARY_NAME) -v
 
-# build the Sentinel docker image
-docker-image:
-	docker build -t gatblau/$(BINARY_NAME):$(IMG_VER) .
+# produce a new version tag
+version:
+	sh version.sh $(APP_VER)
+
+# build the Sentinel container image
+image:
+	$(MAKE) version
+	docker build -t $(REPO_NAME)/$(BINARY_NAME)-snapshot:$(shell cat ./version) .
+	docker tag $(REPO_NAME)/$(BINARY_NAME)-snapshot:$(shell cat ./version) $(REPO_NAME)/$(BINARY_NAME)-snapshot:latest
+
+# push the Sentinel container image to the registry
+push:
+	docker push $(REPO_NAME)/$(BINARY_NAME)-snapshot:$(shell cat ./version)
+	docker push $(REPO_NAME)/$(BINARY_NAME)-snapshot:latest
+	rm ./version
 
 # deletes dangling images
-docker-clean:
+clean:
 	docker rmi $(DANGLING_IMS)
 
-# package the terraform provider for all platforms
+# package the Sentinel binary for all platforms
 package:
 	go fmt
 	$(MAKE) package_linux
