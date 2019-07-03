@@ -70,6 +70,7 @@ type Observe struct {
 	Service               bool
 	Pod                   bool
 	PersistentVolume      bool
+	PersistentVolumeClaim bool
 	Namespace             bool
 	Deployment            bool
 	ReplicationController bool
@@ -121,6 +122,7 @@ func NewConfig() (Config, error) {
 	_ = v.BindEnv("Observe.Service")
 	_ = v.BindEnv("Observe.Pod")
 	_ = v.BindEnv("Observe.PersistentVolume")
+	_ = v.BindEnv("Observe.PersistentVolumeClaim")
 	_ = v.BindEnv("Observe.Namespace")
 	_ = v.BindEnv("Observe.Deployment")
 	_ = v.BindEnv("Observe.ReplicationController")
@@ -199,6 +201,7 @@ func NewConfig() (Config, error) {
 	c.Observe.Service = v.GetBool("Observe.Service")
 	c.Observe.Pod = v.GetBool("Observe.Pod")
 	c.Observe.PersistentVolume = v.GetBool("Observe.PersistentVolume")
+	c.Observe.PersistentVolumeClaim = v.GetBool("Observe.PersistentVolumeClaim")
 	c.Observe.Namespace = v.GetBool("Observe.Namespace")
 	c.Observe.ConfigMap = v.GetBool("Observe.ConfigMap")
 	c.Observe.DaemonSet = v.GetBool("Observe.DaemonSet")
