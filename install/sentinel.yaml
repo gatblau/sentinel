@@ -1,0 +1,99 @@
+apiVersion: v1
+kind: Template
+metadata:
+  name:  sentinel-template
+  annotations:
+    description: "Template to deploy the Sentinel service"
+objects:
+  - apiVersion: apps.openshift.io/v1
+    kind: DeploymentConfig
+    metadata:
+      name: sentinel
+    spec:
+      replicas: 1
+      progressDeadlineSeconds: 600
+      revisionHistoryLimit: 10
+      selector:
+        deploymentconfig: onixdb
+      strategy:
+        activeDeadlineSeconds: 21600
+        resources: {}
+        rollingParams:
+          intervalSeconds: 1
+          maxSurge: 25%
+          maxUnavailable: 25%
+          timeoutSeconds: 600
+          updatePeriodSeconds: 1
+        type: Rolling
+      template:
+        metadata:
+          labels:
+            app: sentinel
+            deploymentconfig: sentinel
+        spec:
+          containers:
+            - name: sentinel
+              env:
+                - name: SL_LOGINLEVEL
+                  value: Info
+                - name: SL_PUBLISHERS_PUBLISHER
+                  value: logger
+                - name: SL_PUBLISHERS_LOGGER_OUTPUTTO
+                  value: stdout
+                - name: SL_PUBLISHERS_WEBHOOK_1_URI
+                  value: oxkube/webhook
+                - name: SL_PUBLISHERS_WEBHOOK_1_AUTHENTICATION
+                  value: basic
+                - name: SL_PUBLISHERS_WEBHOOK_1_USERNAME
+                  value: aaa
+                - name: SL_PUBLISHERS_WEBHOOK_1_PASSWORD
+                  value: aaa
+                - name: SL_OBSERVE_NAMESPACE
+                  value: 'true'
+                - name: SL_OBSERVE_SERVICE
+                  value: 'true'
+                - name: SL_OBSERVE_PERSISTENTVOLUMECLAIM
+                  value: 'true'
+                - name: SL_OBSERVE_REPLICATIONCONTROLLER
+                  value: 'true'
+                - name: SL_OBSERVE_RESOURCEQUOTA
+                  value: 'true'
+              imagePullPolicy: IfNotPresent
+              resources: {}
+              terminationMessagePath: /dev/termination-log
+              terminationMessagePolicy: File
+          dnsPolicy: ClusterFirst
+          restartPolicy: Always
+          schedulerName: default-scheduler
+          securityContext: {}
+          terminationGracePeriodSeconds: 30
+      triggers:
+        - type: ConfigChange
+        - type: ImageChange
+          imageChangeParams:
+            automatic: true
+            containerNames:
+              - sentinel
+            from:
+              kind: ImageStreamTag
+              name: sentinel-snapshot:latest
+  - apiVersion: image.openshift.io/v1
+    kind: ImageStream
+    metadata:
+      annotations:
+      labels:
+        app: sentinel
+      name: sentinel
+    spec:
+      lookupPolicy:
+        local: true
+      tags:
+        - annotations:
+          from:
+            kind: DockerImage
+            name: gatblau/sentinel-snapshot
+          importPolicy:
+            scheduled: true
+          name: latest
+          referencePolicy:
+            type: Local
