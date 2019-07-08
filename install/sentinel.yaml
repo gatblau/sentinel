@@ -54,7 +54,7 @@ objects:
       progressDeadlineSeconds: 600
       revisionHistoryLimit: 10
       selector:
-        deploymentconfig: onixdb
+        deploymentconfig: sentinel
       strategy:
         activeDeadlineSeconds: 21600
         resources: {}
