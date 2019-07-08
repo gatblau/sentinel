@@ -9,7 +9,7 @@ objects:
     kind: ServiceAccount
     metadata:
       name: sentinel
-#      namespace: default
+      namespace: "${NAMESPACE}"
   - apiVersion: rbac.authorization.k8s.io/v1
     kind: ClusterRole
     metadata:
@@ -44,7 +44,7 @@ objects:
     subjects:
       - kind: ServiceAccount
         name: sentinel
-#        namespace: default
+        namespace: "${NAMESPACE}"
   - apiVersion: apps.openshift.io/v1
     kind: DeploymentConfig
     metadata:
