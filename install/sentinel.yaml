@@ -117,7 +117,7 @@ objects:
               - sentinel
             from:
               kind: ImageStreamTag
-              name: sentinel-snapshot:latest
+              name: sentinel:latest
   - apiVersion: image.openshift.io/v1
     kind: ImageStream
     metadata:
