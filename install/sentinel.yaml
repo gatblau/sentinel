@@ -44,7 +44,7 @@ objects:
     subjects:
       - kind: ServiceAccount
         name: sentinel
-        namespace: default
+#        namespace: default
   - apiVersion: apps.openshift.io/v1
     kind: DeploymentConfig
     metadata:
