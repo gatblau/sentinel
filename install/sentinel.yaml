@@ -9,7 +9,7 @@ objects:
     kind: ServiceAccount
     metadata:
       name: sentinel
-      namespace: default
+#      namespace: default
   - apiVersion: rbac.authorization.k8s.io/v1
     kind: ClusterRole
     metadata:
