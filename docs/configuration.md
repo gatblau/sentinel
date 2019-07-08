@@ -12,6 +12,7 @@ The available environment variables are described below.
 
 | File Var | Environment Var | Description | Default |
 |---|---|---|---|
+| Platform | SL_PLATFORM | the identifier of the platform . | KUBE-01 |
 | KubeConfig | SL_KUBECONFIG | the path to the kubernetes configuration file used by the Sentinel to connect to the kubernetes API. | ~/.kube/config |
 | LoginLevel | SL_LOGINLEVEL | defines the login level used by the software. Possible values are: __Trace, Debug, Info, Warning, Error, Fatal and Panic__. | Info |
 | Publishers.Publisher| SL_PUBLISHERS_PUBLISHER | defines which publisher to use (i.e. webhook, broker or logger). The logger publisher is there to write to standard output. | logger |

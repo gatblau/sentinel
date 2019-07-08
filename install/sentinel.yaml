@@ -3,17 +3,38 @@ kind: Template
 metadata:
   name:  sentinel-template
   annotations:
-    description: "Template to deploy the Sentinel service"
+    description: "Deploys the Sentinel process."
+parameters:
+  - name: CURRENT_NAMESPACE
+    value: sentinel
+    displayName: Deployment Project
+    description: The name of the project where the Sentinel is deployed
+    required: true
+  - name: PLATFORM_ID
+    value: KUBE-01
+    displayName: Platform Identifier
+    description: The identifier of the platform Sentinel is deployed on
+    required: true
+  - name: LOG_LEVEL
+    value: Info
+    displayName: Log Level
+    description: The level of login used by Sentinel - i.e. Trace, Debug, Info, Warn, Error, Fatal, Panic
+    required: true
+  - name: PUBLISHER
+    value: logger
+    displayName: Publisher
+    description: The publisher used by Sentinel to send event information - i.e. logger, webhook, broker
+    required: true
 objects:
   - apiVersion: v1
     kind: ServiceAccount
     metadata:
       name: sentinel
-      namespace: "${NAMESPACE}"
+      namespace: "${CURRENT_NAMESPACE}"
   - apiVersion: rbac.authorization.k8s.io/v1
     kind: ClusterRole
     metadata:
-      name: resource_watcher
+      name: sentinel-watcher
     rules:
       - apiGroups: ["*"] # all api groups
         resources: [
@@ -24,13 +45,15 @@ objects:
           "deployments",
           "namespaces",
           "persistentvolumes",
+          "persistentvolumeclaims",
           "replicasets",
           "serviceaccounts",
           "clusterroles",
           "jobs",
           "ingresses",
           "daemonsets",
-          "replicationcontrollers"
+          "replicationcontrollers",
+          "resourcequotas"
         ]
         verbs: ["get", "watch", "list"]
   - apiVersion: rbac.authorization.k8s.io/v1beta1
@@ -40,11 +63,11 @@ objects:
     roleRef:
       apiGroup: rbac.authorization.k8s.io
       kind: ClusterRole
-      name: resource_watcher
+      name: sentinel-watcher
     subjects:
       - kind: ServiceAccount
         name: sentinel
-        namespace: "${NAMESPACE}"
+        namespace: "${CURRENT_NAMESPACE}"
   - apiVersion: apps.openshift.io/v1
     kind: DeploymentConfig
     metadata:
@@ -74,20 +97,28 @@ objects:
           containers:
             - name: sentinel
               env:
+                - name: SL_PLATFORM
+                  value: "${PLATFORM_ID}"
                 - name: SL_LOGINLEVEL
-                  value: Info
+                  value: "${LOG_LEVEL}"
                 - name: SL_PUBLISHERS_PUBLISHER
-                  value: logger
+                  value: "${PUBLISHER}"
                 - name: SL_PUBLISHERS_LOGGER_OUTPUTTO
                   value: stdout
                 - name: SL_PUBLISHERS_WEBHOOK_1_URI
-                  value: oxkube/webhook
+                  value: oxkube:8000/webhook
                 - name: SL_PUBLISHERS_WEBHOOK_1_AUTHENTICATION
                   value: basic
                 - name: SL_PUBLISHERS_WEBHOOK_1_USERNAME
-                  value: aaa
+                  valueFrom:
+                    secretKeyRef:
+                      name: webhook-secret
+                      key: username
                 - name: SL_PUBLISHERS_WEBHOOK_1_PASSWORD
-                  value: aaa
+                  valueFrom:
+                    secretKeyRef:
+                      name: webhook-secret
+                      key: password
                 - name: SL_OBSERVE_NAMESPACE
                   value: 'true'
                 - name: SL_OBSERVE_SERVICE
@@ -138,3 +169,11 @@ objects:
           name: latest
           referencePolicy:
             type: Local
+  - apiVersion: v1
+    kind: Secret
+    metadata:
+      name: webhook-secret
+    type: Opaque
+    data:
+      username: YWRtaW4=
+      password: a3ViMw==
