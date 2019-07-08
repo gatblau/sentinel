@@ -5,6 +5,46 @@ metadata:
   annotations:
     description: "Template to deploy the Sentinel service"
 objects:
+  - apiVersion: v1
+    kind: ServiceAccount
+    metadata:
+      name: sentinel
+      namespace: default
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRole
+    metadata:
+      name: resource_watcher
+    rules:
+      - apiGroups: ["*"] # all api groups
+        resources: [
+          "pods",
+          "secrets",
+          "configmaps",
+          "services",
+          "deployments",
+          "namespaces",
+          "persistentvolumes",
+          "replicasets",
+          "serviceaccounts",
+          "clusterroles",
+          "jobs",
+          "ingresses",
+          "daemonsets",
+          "replicationcontrollers"
+        ]
+        verbs: ["get", "watch", "list"]
+  - apiVersion: rbac.authorization.k8s.io/v1beta1
+    kind: ClusterRoleBinding
+    metadata:
+      name: sentinel
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: resource_watcher
+    subjects:
+      - kind: ServiceAccount
+        name: sentinel
+        namespace: default
   - apiVersion: apps.openshift.io/v1
     kind: DeploymentConfig
     metadata:
@@ -66,6 +106,7 @@ objects:
           restartPolicy: Always
           schedulerName: default-scheduler
           securityContext: {}
+          serviceAccountName: sentinel
           terminationGracePeriodSeconds: 30
       triggers:
         - type: ConfigChange
