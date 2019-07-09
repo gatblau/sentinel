@@ -1,11 +1,11 @@
 apiVersion: v1
 kind: Template
 metadata:
-  name:  sentinel-template
+  name:  Sentinel
   annotations:
     description: "Deploys the Sentinel process."
 parameters:
-  - name: CURRENT_NAMESPACE
+  - name: SENTINEL_NAMESPACE
     value: sentinel
     displayName: Deployment Project
     description: The name of the project where the Sentinel is deployed
@@ -13,24 +13,57 @@ parameters:
   - name: PLATFORM_ID
     value: KUBE-01
     displayName: Platform Identifier
-    description: The identifier of the platform Sentinel is deployed on
+    description: The unique identifier string for the platform Sentinel is deployed and reporting events on
     required: true
   - name: LOG_LEVEL
     value: Info
     displayName: Log Level
-    description: The level of login used by Sentinel - i.e. Trace, Debug, Info, Warn, Error, Fatal, Panic
+    description: >-
+      The level of login used by Sentinel
+      - i.e. Trace, Debug, Info, Warn, Error, Fatal, Panic
     required: true
   - name: PUBLISHER
     value: logger
     displayName: Publisher
-    description: The publisher used by Sentinel to send event information - i.e. logger, webhook, broker
+    description: >-
+      The publisher used by Sentinel to send event information
+      - i.e. logger, webhook, broker
     required: true
+  - name: WEBHOOK_URI
+    value: oxkube:8000/webhook
+    displayName: Web Hook URI
+    description: >-
+      The URI of the webhook used by Sentinel to publish events
+      - only required if Publisher is set to webhook
+    required: false
+  - name: WEBHOOK_AUTHENTICATION
+    value: basic
+    displayName: Web Hook Authentication Method
+    description: >-
+      The authentication method used by the web hook used by Sentinel to publish events
+      - only required if Publisher is set to web hook
+      - i.e. none, basic
+    required: false
+  - name: WEBHOOK_USER
+    value: "admin"
+    displayName: Web Hook Username
+    description: >-
+      The username used for basic authentication of the webhook to which Sentinel publishes events.
+      Required if WEBHOOK_AUTHENTICATION is set to basic.
+    required: false
+  - name: WEBHOOK_PWD
+      value: "kub3"
+      displayName: Web Hook Password
+      description: >-
+        The password used for basic authentication of the webhook to which Sentinel publishes events.
+        Required if WEBHOOK_AUTHENTICATION is set to basic.
+      required: false
 objects:
   - apiVersion: v1
     kind: ServiceAccount
     metadata:
       name: sentinel
-      namespace: "${CURRENT_NAMESPACE}"
+      namespace: "${SENTINEL_NAMESPACE}"
   - apiVersion: rbac.authorization.k8s.io/v1
     kind: ClusterRole
     metadata:
@@ -67,7 +100,7 @@ objects:
     subjects:
       - kind: ServiceAccount
         name: sentinel
-        namespace: "${CURRENT_NAMESPACE}"
+        namespace: "${SENTINEL_NAMESPACE}"
   - apiVersion: apps.openshift.io/v1
     kind: DeploymentConfig
     metadata:
@@ -106,9 +139,9 @@ objects:
                 - name: SL_PUBLISHERS_LOGGER_OUTPUTTO
                   value: stdout
                 - name: SL_PUBLISHERS_WEBHOOK_1_URI
-                  value: oxkube:8000/webhook
+                  value: "${WEBHOOK_URI}"
                 - name: SL_PUBLISHERS_WEBHOOK_1_AUTHENTICATION
-                  value: basic
+                  value: "${WEBHOOK_AUTHENTICATION}"
                 - name: SL_PUBLISHERS_WEBHOOK_1_USERNAME
                   valueFrom:
                     secretKeyRef:
@@ -174,6 +207,6 @@ objects:
     metadata:
       name: webhook-secret
     type: Opaque
-    data:
-      username: YWRtaW4=
-      password: a3ViMw==
+    stringData:
+      username: "${WEBHOOK_USER}"
+      password: "${WEBHOOK_PWD}"

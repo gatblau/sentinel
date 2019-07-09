@@ -8,7 +8,7 @@ oc new-project sentinel --display-name="Sentinel" --description="Hosts the Senti
 The Sentinel template can be imported as follows:
 ```bash
 # import the template in the catalogue
-oc create -f sentinel.yaml -n openshift
+oc create -f sentinel.yml -n openshift
 ```
 Once the template is imported in OpenShift, it shows in the catalogue and can be deployed using the web console.
 
@@ -16,6 +16,6 @@ Otherwise, to install it from the command line:
 
 ```bash
 # deploy the app
-oc new-app https://raw.githubusercontent.com/gatblau/sentinel/dev/install/sentinel.yaml
+oc new-app https://raw.githubusercontent.com/gatblau/sentinel/dev/install/openshift/sentinel.yml
 ```
 
