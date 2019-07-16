@@ -76,3 +76,19 @@ package_darwin:
 package_windows:
 	export GOROOT=/usr/local/go; export GOPATH=$(HOME)/go; export CGO_ENABLED=0; export GOOS=windows; export GOARCH=amd64; $(GO_CMD) build -o $(BUILD_FOLDER)/$(BINARY_NAME) -v
 	zip -mjT $(BUILD_FOLDER)/$(BINARY_NAME)_windows_amd64.zip $(BUILD_FOLDER)/$(BINARY_NAME)
+
+# creates namespace and roles to run sentinel in openshift
+oc-setup:
+	cd ./scripts/openshift && sh setup.sh
+
+# imports sentinel template into opneshift
+oc-import-template:
+	cd ./scripts/openshift && oc create -f sentinel.yml -n openshift
+
+# deletes the sentinel template in opneshift
+oc-delete-template:
+	oc delete template sentinel -n openshift
+
+# deletes all sentinel resources
+oc-cleanup:
+	cd ./scripts/openshift && sh cleanup.sh

@@ -19,6 +19,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/sirupsen/logrus"
+	"io"
+	"io/ioutil"
 	"net/http"
 )
 
@@ -59,6 +61,12 @@ func (pub *WebhookPub) Init(c *Config, log *logrus.Entry) {
 
 // publishes events to the registered web hooks
 func (pub *WebhookPub) Publish(event Event) {
+	if event.Change.Type != "DELETE" && event.Object == nil {
+		// if the CREATE OR UPDATE event metadata is nil, then is likely the resource is already gone
+		// therefore it does not publish the event
+		pub.log.Tracef("Event metadata not found when trying to post to '%s', skipping publication.", pub.uri)
+		return
+	}
 	for i := 0; i < len(pub.uri); i++ {
 		err := pub.post(pub.uri[i], pub.token[i], event)
 		if err != nil {
@@ -78,10 +86,10 @@ func (pub *WebhookPub) Publish(event Event) {
 }
 
 // Make a POST to the webhook
-func (pub *WebhookPub) post(uri string, token string, object interface{}) error {
+func (pub *WebhookPub) post(uri string, token string, object Event) error {
 	// if the uri is empty omitting post
 	if uri == "" {
-		return errors.New("Post to duplicate URI omitted. Check Webhook configuration for duplicate URI values.")
+		return errors.New("post to duplicate URI omitted, check Webhook configuration for duplicate URI values")
 	}
 
 	// gets a byte reader
@@ -92,7 +100,7 @@ func (pub *WebhookPub) post(uri string, token string, object interface{}) error 
 	}
 
 	// creates the request
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/webhook", uri), payload)
+	req, err := http.NewRequest("POST", uri, payload)
 
 	// any errors are returned
 	if err != nil {
@@ -114,7 +122,16 @@ func (pub *WebhookPub) post(uri string, token string, object interface{}) error 
 	if err != nil {
 		return err
 	}
+	if response == nil {
+		return errors.New(fmt.Sprintf("No response for Request URI %s with payload %s", uri, object))
+	}
+	// if the response has an error then returns
+	if response.StatusCode >= 300 {
 
+		return errors.New(fmt.Sprintf("Request to URI %s failed with status: '%s'. Response body: '%s'. Request payload: '%s'", uri, response.Status, pub.toByteArray(response.Body), pub.toByteArray(req.Body)))
+	} else {
+		pub.log.Tracef("Payload '%s' posted to uri '%s' with status '%s'", payload, uri, response.Status)
+	}
 	defer func() {
 		if ferr := response.Body.Close(); ferr != nil {
 			err = ferr
@@ -123,4 +140,13 @@ func (pub *WebhookPub) post(uri string, token string, object interface{}) error 
 
 	// returns the result
 	return err
+}
+
+// unmarshal the http response into a json like structure
+func (pub *WebhookPub) toByteArray(r io.ReadCloser) []byte {
+	bytes, err := ioutil.ReadAll(r)
+	if err != nil {
+		pub.log.Warnf("Failed to read response or response body.")
+	}
+	return bytes
 }

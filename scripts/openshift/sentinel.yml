@@ -1,15 +1,25 @@
+#
+#    Sentinel - Copyright (c) 2019 by www.gatblau.org
+#
+#    Licensed under the Apache License, Version 2.0 (the "License");
+#    you may not use this file except in compliance with the License.
+#    You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+#    Unless required by applicable law or agreed to in writing, software distributed under
+#    the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+#    either express or implied.
+#    See the License for the specific language governing permissions and limitations under the License.
+#
+#    Contributors to this project, hereby assign copyright in this code to the project,
+#    to be licensed under the same terms as the rest of the code.
+#
+---
 apiVersion: v1
 kind: Template
 metadata:
-  name:  Sentinel
+  name:  sentinel
   annotations:
-    description: "Deploys the Sentinel process."
+    description: "Deploys Sentinel event watching for Kubernetes"
 parameters:
-  - name: SENTINEL_NAMESPACE
-    value: sentinel
-    displayName: Deployment Project
-    description: The name of the project where the Sentinel is deployed
-    required: true
   - name: PLATFORM_ID
     value: KUBE-01
     displayName: Platform Identifier
@@ -30,7 +40,7 @@ parameters:
       - i.e. logger, webhook, broker
     required: true
   - name: WEBHOOK_URI
-    value: oxkube:8000/webhook
+    value: http://oxkube-onix.192.168.64.6.nip.io/webhook
     displayName: Web Hook URI
     description: >-
       The URI of the webhook used by Sentinel to publish events
@@ -52,55 +62,13 @@ parameters:
       Required if WEBHOOK_AUTHENTICATION is set to basic.
     required: false
   - name: WEBHOOK_PWD
-      value: "kub3"
-      displayName: Web Hook Password
-      description: >-
-        The password used for basic authentication of the webhook to which Sentinel publishes events.
-        Required if WEBHOOK_AUTHENTICATION is set to basic.
-      required: false
+    value: "kub3"
+    displayName: Web Hook Password
+    description: >-
+      The password used for basic authentication of the webhook to which Sentinel publishes events.
+      Required if WEBHOOK_AUTHENTICATION is set to basic.
+    required: false
 objects:
-  - apiVersion: v1
-    kind: ServiceAccount
-    metadata:
-      name: sentinel
-      namespace: "${SENTINEL_NAMESPACE}"
-  - apiVersion: rbac.authorization.k8s.io/v1
-    kind: ClusterRole
-    metadata:
-      name: sentinel-watcher
-    rules:
-      - apiGroups: ["*"] # all api groups
-        resources: [
-          "pods",
-          "secrets",
-          "configmaps",
-          "services",
-          "deployments",
-          "namespaces",
-          "persistentvolumes",
-          "persistentvolumeclaims",
-          "replicasets",
-          "serviceaccounts",
-          "clusterroles",
-          "jobs",
-          "ingresses",
-          "daemonsets",
-          "replicationcontrollers",
-          "resourcequotas"
-        ]
-        verbs: ["get", "watch", "list"]
-  - apiVersion: rbac.authorization.k8s.io/v1beta1
-    kind: ClusterRoleBinding
-    metadata:
-      name: sentinel
-    roleRef:
-      apiGroup: rbac.authorization.k8s.io
-      kind: ClusterRole
-      name: sentinel-watcher
-    subjects:
-      - kind: ServiceAccount
-        name: sentinel
-        namespace: "${SENTINEL_NAMESPACE}"
   - apiVersion: apps.openshift.io/v1
     kind: DeploymentConfig
     metadata:
@@ -210,3 +178,4 @@ objects:
     stringData:
       username: "${WEBHOOK_USER}"
       password: "${WEBHOOK_PWD}"
+...

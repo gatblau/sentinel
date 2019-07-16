@@ -162,7 +162,7 @@ func (w *Watcher) publish(change StatusChange) error {
 		w.log.Tracef("%s %s does not exist anymore.", strings.ToUpper(change.Kind), change.key)
 	}
 	if err != nil {
-		return fmt.Errorf("Failed to retrieve object with key %s: %s", change.key, err)
+		return fmt.Errorf("failed to retrieve object with key %s: %s", change.key, err)
 	} else {
 		// get object metadata
 		meta := getMetaData(obj)
