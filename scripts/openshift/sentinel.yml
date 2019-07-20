@@ -106,16 +106,16 @@ objects:
                   value: "${PUBLISHER}"
                 - name: SL_PUBLISHERS_LOGGER_OUTPUTTO
                   value: stdout
-                - name: SL_PUBLISHERS_WEBHOOK_1_URI
+                - name: SL_PUBLISHERS_WEBHOOK_0_URI
                   value: "${WEBHOOK_URI}"
-                - name: SL_PUBLISHERS_WEBHOOK_1_AUTHENTICATION
+                - name: SL_PUBLISHERS_WEBHOOK_0_AUTHENTICATION
                   value: "${WEBHOOK_AUTHENTICATION}"
-                - name: SL_PUBLISHERS_WEBHOOK_1_USERNAME
+                - name: SL_PUBLISHERS_WEBHOOK_0_USERNAME
                   valueFrom:
                     secretKeyRef:
                       name: webhook-secret
                       key: username
-                - name: SL_PUBLISHERS_WEBHOOK_1_PASSWORD
+                - name: SL_PUBLISHERS_WEBHOOK_0_PASSWORD
                   valueFrom:
                     secretKeyRef:
                       name: webhook-secret
