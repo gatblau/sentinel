@@ -2,7 +2,7 @@
 
 # Configuration
 
-The Sentinel process can be configured by either a [config file](./config.toml) or via environment variables.
+The Sentinel process can be configured by either a [config file](../config.toml) or via environment variables.
 
 When environment variables are set, they override the values in the config file.
 
