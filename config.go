@@ -168,19 +168,19 @@ func NewConfig() (Config, error) {
 			// have to do ad-hoc binding of the array as Viper currently does not support
 			// binding of TOML Array of Tables now try and bind any env variable following
 			// the format PUBLISHERS_WEBHOOK_N_URI, etc where N is the array index
-			value := os.Getenv(fmt.Sprintf("PUBLISHERS_WEBHOOK_%s_URI", strconv.Itoa(i)))
+			value := os.Getenv(fmt.Sprintf("SL_PUBLISHERS_WEBHOOK_%s_URI", strconv.Itoa(i)))
 			if len(value) > 0 {
 				h.URI = value
 			}
-			value = os.Getenv(fmt.Sprintf("PUBLISHERS_WEBHOOK_%s_USERNAME", strconv.Itoa(i)))
+			value = os.Getenv(fmt.Sprintf("SL_PUBLISHERS_WEBHOOK_%s_USERNAME", strconv.Itoa(i)))
 			if len(value) > 0 {
 				h.Username = value
 			}
-			value = os.Getenv(fmt.Sprintf("PUBLISHERS_WEBHOOK_%s_PASSWORD", strconv.Itoa(i)))
+			value = os.Getenv(fmt.Sprintf("SL_PUBLISHERS_WEBHOOK_%s_PASSWORD", strconv.Itoa(i)))
 			if len(value) > 0 {
 				h.Password = value
 			}
-			value = os.Getenv(fmt.Sprintf("PUBLISHERS_WEBHOOK_%s_AUTHENTICATION", strconv.Itoa(i)))
+			value = os.Getenv(fmt.Sprintf("SL_PUBLISHERS_WEBHOOK_%s_AUTHENTICATION", strconv.Itoa(i)))
 			if len(value) > 0 {
 				h.Authentication = value
 			}
