@@ -2,15 +2,15 @@
 
 # Configuration
 
-The Sentinel process can be configured by either a [config file](../config.toml) or via environment variables.
+Sentinel can be configured by either updating variables in its [configuration file](../config.toml) or setting environment variables.
 
-When environment variables are set, they override the values in the config file.
+When environment variables are set, they override the values in the configuration file.
 
-The available environment variables are described below.
+The configuration file and corresponding environment variables are described below.
 
-### General Vars
+## General Variables
 
-| File Var | Environment Var | Description | Default |
+| Config File Var | Environment Var | Description | Default |
 |---|---|---|---|
 | Platform | SL_PLATFORM | the identifier of the platform . | KUBE-01 |
 | KubeConfig | SL_KUBECONFIG | the path to the kubernetes configuration file used by the Sentinel to connect to the kubernetes API. | ~/.kube/config |
@@ -24,7 +24,7 @@ The available environment variables are described below.
 | Publishers.Logger.OutputTo | SL_PUBLISHERS_LOGGER_OUTPUTTO | whether to log to the standard output (stdout) or to the file system (file) | stdout |
 | Publishers.Logger.LogFolder| SL_PUBLISHERS_LOGGER_LOGFOLDER | the path to the log folder, only required if Output = "file" | logs |
 
-### _Webhook Publisher Variables_
+## _Webhook Publisher Variables_
 
 The webhook publisher allows for the configuration of one or more target endpoints/web consumer applications. For this reason, whithin the [config.toml](../config.toml) file, each endpoint requires a separate [TOML](https://github.com/toml-lang/toml) table using double square brackets syntax: __[[Publishers.Webhook]]__ - the TOML definition of array of tables.
 
@@ -32,10 +32,10 @@ Variables within each TOML table, are mapped to environment variables using indi
 
 | Environment Var | Table | Description |
 |---|:-:|---|
-|__SL_PUBLISHERS_WEBHOOK_1_URI__| 1 | URI of the first endpoint |
-|__SL_PUBLISHERS_WEBHOOK_2_URI__| 2 | URI of the second endpoint |
+|__SL_PUBLISHERS_WEBHOOK_0_URI__| 0 | URI of the first endpoint |
+|__SL_PUBLISHERS_WEBHOOK_1_URI__| 1 | URI of the second endpoint |
 
-__NOTE__: if the intention is to use environment veariables to configure multiple webhooks, then as many [[webhook]] tables need to be created in the config.toml file as web hooks are required to set in envoronment variables. This is because the binding of environment variables to cingif file variables is based on the number of [[webhook]] tables in the config.toml file.
+__NOTE__: if the intention is to use environment variables to configure multiple webhooks, then as many _[[webhook]]_ tables need to be created in the config.toml file as web hooks are required to set in environment variables. This is because the binding of environment variables to configuration file variables is based on the number of _[[webhook]]_ tables in the [config.toml](../config.toml) file.
 
 The following table shows all configuration variables available to the webhook publisher:
 
@@ -46,7 +46,7 @@ The following table shows all configuration variables available to the webhook p
 | Publishers.Webhook.Username | SL_PUBLISHERS_WEBHOOK_[X]_USERNAME | the optional username for basic authentication | sentinel |
 | Publishers.Webhook.Password | SL_PUBLISHERS_WEBHOOK_[X]_PASSWORD | the optional password for basic authentication | s3nt1nel |
 
-### _Broker Publisher Variables_
+## _Broker Publisher Variables_
 
 | File Var | Environment Var | Description | Default |
 |---|---|---|---|
@@ -56,7 +56,9 @@ The following table shows all configuration variables available to the webhook p
 | Publishers.Broker.CA | SL_PUBLISHERS_BROKER_CA | optional certificate authority file for TLS client authentication | - |
 | Publishers.Broker.Verify | SL_PUBLISHERS_BROKER_VERIFY | optional verify ssl certificates chain | false |
 
-### _Observable Object Variables_
+## _Observable Objects Flags_
+
+The following flags can be used to switch on/off the objects Sentinel observes:
 
 | File Var | Environment Var | Description | Default |
 |---|---|---|---|

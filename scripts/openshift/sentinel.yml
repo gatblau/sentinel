@@ -62,7 +62,7 @@ parameters:
       Required if WEBHOOK_AUTHENTICATION is set to basic.
     required: false
   - name: WEBHOOK_PWD
-    value: "kub3"
+    value: "0n1x"
     displayName: Web Hook Password
     description: >-
       The password used for basic authentication of the webhook to which Sentinel publishes events.
