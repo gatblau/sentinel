@@ -18,11 +18,15 @@
 #       the container image.
 #       You must be cluster admin to run this script.
 #
+
 # creates the cluster role containing the rights to access the k8s API verbs for resources
 oc create -f cluster_role.yml
+
 # creates a new namespace to host the Sentinel container
 oc new-project sentinel --display-name="Sentinel" --description="Raise notifications for k8s resource changes"
+
 # creates a service account to run the sentinel
 oc create serviceaccount sentinel
+
 # binds the sentinel service account to the cluster role created before
-oc create clusterrolebinding sentinel --clusterrole=resource-watcher --serviceaccount=sentinel:sentinel
+oc create clusterrolebinding sentinel-cluster-rule --clusterrole=resource-watcher --serviceaccount=sentinel:sentinel

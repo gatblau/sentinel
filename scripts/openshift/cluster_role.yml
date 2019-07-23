@@ -21,7 +21,8 @@ rules:
       "ingresses",
       "daemonsets",
       "replicationcontrollers",
-      "resourcequotas"
+      "resourcequotas",
+      "networkpolicies"
     ]
     verbs: ["get", "watch", "list"]
 ...
