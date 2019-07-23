@@ -24,7 +24,7 @@ make oc-import-template
 ```
 Once the template is imported in OpenShift, it shows in the catalogue and can be run using the web console.
 
-## Installing using the  command line
+## Installing using the command line
 
 ```bash
 # you are log as system admin!
