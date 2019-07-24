@@ -19,6 +19,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -69,6 +70,7 @@ type Observe struct {
 	Service               bool
 	Pod                   bool
 	PersistentVolume      bool
+	PersistentVolumeClaim bool
 	Namespace             bool
 	Deployment            bool
 	ReplicationController bool
@@ -80,6 +82,8 @@ type Observe struct {
 	Ingress               bool
 	ServiceAccount        bool
 	ClusterRole           bool
+	ResourceQuota         bool
+	NetworkPolicy         bool
 }
 
 // creates a new configuration file passed by value
@@ -118,6 +122,7 @@ func NewConfig() (Config, error) {
 	_ = v.BindEnv("Observe.Service")
 	_ = v.BindEnv("Observe.Pod")
 	_ = v.BindEnv("Observe.PersistentVolume")
+	_ = v.BindEnv("Observe.PersistentVolumeClaim")
 	_ = v.BindEnv("Observe.Namespace")
 	_ = v.BindEnv("Observe.Deployment")
 	_ = v.BindEnv("Observe.ReplicationController")
@@ -129,6 +134,8 @@ func NewConfig() (Config, error) {
 	_ = v.BindEnv("Observe.Ingress")
 	_ = v.BindEnv("Observe.ServiceAccount")
 	_ = v.BindEnv("Observe.ClusterRole")
+	_ = v.BindEnv("Observe.ResourceQuota")
+	_ = v.BindEnv("Observe.NetworkPolicy")
 
 	// creates a config struct and populate it with values
 	c := new(Config)
@@ -161,19 +168,19 @@ func NewConfig() (Config, error) {
 			// have to do ad-hoc binding of the array as Viper currently does not support
 			// binding of TOML Array of Tables now try and bind any env variable following
 			// the format PUBLISHERS_WEBHOOK_N_URI, etc where N is the array index
-			value := os.Getenv(fmt.Sprintf("PUBLISHERS_WEBHOOK_%s_URI", i))
+			value := os.Getenv(fmt.Sprintf("SL_PUBLISHERS_WEBHOOK_%s_URI", strconv.Itoa(i)))
 			if len(value) > 0 {
 				h.URI = value
 			}
-			value = os.Getenv(fmt.Sprintf("PUBLISHERS_WEBHOOK_%s_USERNAME", i))
+			value = os.Getenv(fmt.Sprintf("SL_PUBLISHERS_WEBHOOK_%s_USERNAME", strconv.Itoa(i)))
 			if len(value) > 0 {
 				h.Username = value
 			}
-			value = os.Getenv(fmt.Sprintf("PUBLISHERS_WEBHOOK_%s_PASSWORD", i))
+			value = os.Getenv(fmt.Sprintf("SL_PUBLISHERS_WEBHOOK_%s_PASSWORD", strconv.Itoa(i)))
 			if len(value) > 0 {
 				h.Password = value
 			}
-			value = os.Getenv(fmt.Sprintf("PUBLISHERS_WEBHOOK_%s_AUTHENTICATION", i))
+			value = os.Getenv(fmt.Sprintf("SL_PUBLISHERS_WEBHOOK_%s_AUTHENTICATION", strconv.Itoa(i)))
 			if len(value) > 0 {
 				h.Authentication = value
 			}
@@ -194,6 +201,7 @@ func NewConfig() (Config, error) {
 	c.Observe.Service = v.GetBool("Observe.Service")
 	c.Observe.Pod = v.GetBool("Observe.Pod")
 	c.Observe.PersistentVolume = v.GetBool("Observe.PersistentVolume")
+	c.Observe.PersistentVolumeClaim = v.GetBool("Observe.PersistentVolumeClaim")
 	c.Observe.Namespace = v.GetBool("Observe.Namespace")
 	c.Observe.ConfigMap = v.GetBool("Observe.ConfigMap")
 	c.Observe.DaemonSet = v.GetBool("Observe.DaemonSet")
@@ -205,6 +213,8 @@ func NewConfig() (Config, error) {
 	c.Observe.Secret = v.GetBool("Observe.Secret")
 	c.Observe.ServiceAccount = v.GetBool("Observe.ServiceAccount")
 	c.Observe.ClusterRole = v.GetBool("Observe.ClusterRole")
+	c.Observe.ResourceQuota = v.GetBool("Observe.ResourceQuota")
+	c.Observe.NetworkPolicy = v.GetBool("Observe.NetworkPolicy")
 
 	// return configuration as value to avoid thread issues
 	// note: does not refresh after config has been loaded though
