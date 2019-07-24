@@ -21,6 +21,7 @@ import (
 	batchV1 "k8s.io/api/batch/v1"
 	coreV1 "k8s.io/api/core/v1"
 	extV1beta1 "k8s.io/api/extensions/v1beta1"
+	netV1 "k8s.io/api/networking/v1"
 	rbacV1 "k8s.io/api/rbac/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -50,6 +51,9 @@ type Sentinel struct {
 
 // starts observing for K8S resource changes
 func (s *Sentinel) Start() error {
+	// reset the start time for Sentinel
+	startTime = time.Now()
+
 	// loads the configuration
 	c, err := NewConfig()
 	if err == nil {
@@ -124,6 +128,9 @@ func (s *Sentinel) startWatchers(client kubernetes.Interface) {
 	if s.config.Observe.PersistentVolume {
 		s.startWatcher(client, &coreV1.PersistentVolume{}, "persistent_volume")
 	}
+	if s.config.Observe.PersistentVolumeClaim {
+		s.startWatcher(client, &coreV1.PersistentVolumeClaim{}, "persistent_volume_claim")
+	}
 	if s.config.Observe.Namespace {
 		s.startWatcher(client, &coreV1.Namespace{}, "namespace")
 	}
@@ -136,7 +143,7 @@ func (s *Sentinel) startWatchers(client kubernetes.Interface) {
 	if s.config.Observe.ReplicaSet {
 		s.startWatcher(client, &appsV1.ReplicaSet{}, "replicaset")
 	}
-	if s.config.Observe.Deployment {
+	if s.config.Observe.DaemonSet {
 		s.startWatcher(client, &extV1beta1.DaemonSet{}, "daemonset")
 	}
 	if s.config.Observe.Job {
@@ -156,6 +163,12 @@ func (s *Sentinel) startWatchers(client kubernetes.Interface) {
 	}
 	if s.config.Observe.ClusterRole {
 		s.startWatcher(client, &rbacV1.ClusterRole{}, "cluster_role")
+	}
+	if s.config.Observe.ResourceQuota {
+		s.startWatcher(client, &coreV1.ResourceQuota{}, "resource_quota")
+	}
+	if s.config.Observe.NetworkPolicy {
+		s.startWatcher(client, &netV1.NetworkPolicy{}, "network_policy")
 	}
 }
 

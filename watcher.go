@@ -162,7 +162,7 @@ func (w *Watcher) publish(change StatusChange) error {
 		w.log.Tracef("%s %s does not exist anymore.", strings.ToUpper(change.Kind), change.key)
 	}
 	if err != nil {
-		return fmt.Errorf("Failed to retrieve object with key %s: %s", change.key, err)
+		return fmt.Errorf("failed to retrieve object with key %s: %s", change.key, err)
 	} else {
 		// get object metadata
 		meta := getMetaData(obj)
@@ -179,7 +179,8 @@ func (w *Watcher) publish(change StatusChange) error {
 						Change: change,
 						Object: obj,
 					})
-				return nil
+			} else {
+				w.log.Tracef("Change occurred %s before starting Sentinel, so not calling publisher.", meta.CreationTimestamp.Sub(startTime))
 			}
 		case "UPDATE":
 			w.log.Tracef("Calling Publisher.OnUpdate(change -> %+v).", change)
