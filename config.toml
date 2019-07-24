@@ -29,7 +29,7 @@ Platform = "kube-01"
     # logger publisher configuration
     [Publishers.Logger]
         # whether the logger writes to "stdout" or "file"
-        OutputTo = "file"
+        OutputTo = "stdout"
         # the path to the log folder, only required if Output = "file"
         LogFolder = "logs"
 
@@ -60,20 +60,20 @@ Platform = "kube-01"
 
 # kubernetes objects to observe
 [Observe]
-    Service = true
-    Pod = true
+    ClusterRole = false
+    ConfigMap = false
+    DaemonSet = false
+    Deployment = false
+    Ingress = false
+    Job = false
+    Namespace = true
+    NetworkPolicy = false
     PersistentVolume = false
     PersistentVolumeClaim = true
-    Namespace = true
-    Deployment = false
-    ReplicationController = true
+    Pod = true
     ReplicaSet = false
-    DaemonSet = false
-    Job = false
-    Secret = false
-    ConfigMap = false
-    Ingress = false
-    ServiceAccount = false
-    ClusterRole = false
+    ReplicationController = true
     ResourceQuota = true
-    NetworkPolicy = false
+    Secret = false
+    ServiceAccount = false
+    Service = true

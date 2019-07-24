@@ -4,7 +4,7 @@
 platform: "kube-01"
 
 loglevel: "Info"
-publisher: "webhook"
+publisher: "logger"
 
 logger:
   outputto: "stdout"
