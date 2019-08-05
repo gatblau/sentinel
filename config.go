@@ -48,10 +48,11 @@ type Logger struct {
 
 // the configuration for the web hook publisher
 type Webhook struct {
-	URI            string
-	Authentication string
-	Username       string
-	Password       string
+	URI                string
+	Authentication     string
+	Username           string
+	Password           string
+	InsecureSkipVerify bool
 }
 
 // the configuration for the message broker publisher
@@ -161,10 +162,12 @@ func NewConfig() (Config, error) {
 		for i := 0; i < len(whs); i++ {
 			wh := whs[i].(map[string]interface{})
 			h := Webhook{
-				URI:            wh["URI"].(string),
-				Username:       wh["Username"].(string),
-				Password:       wh["Password"].(string),
-				Authentication: wh["Authentication"].(string)}
+				URI:                wh["URI"].(string),
+				Username:           wh["Username"].(string),
+				Password:           wh["Password"].(string),
+				Authentication:     wh["Authentication"].(string),
+				InsecureSkipVerify: wh["InsecureSkipVerify"].(bool),
+			}
 			// have to do ad-hoc binding of the array as Viper currently does not support
 			// binding of TOML Array of Tables now try and bind any env variable following
 			// the format PUBLISHERS_WEBHOOK_N_URI, etc where N is the array index
@@ -183,6 +186,10 @@ func NewConfig() (Config, error) {
 			value = os.Getenv(fmt.Sprintf("SL_PUBLISHERS_WEBHOOK_%s_AUTHENTICATION", strconv.Itoa(i)))
 			if len(value) > 0 {
 				h.Authentication = value
+			}
+			value = os.Getenv(fmt.Sprintf("SL_PUBLISHERS_WEBHOOK_%s_INSECURESKIPVERIFY", strconv.Itoa(i)))
+			if len(value) > 0 {
+				h.InsecureSkipVerify, _ = strconv.ParseBool(value)
 			}
 			c.Publishers.Webhook[i] = h
 		}

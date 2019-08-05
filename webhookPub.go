@@ -15,6 +15,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -30,6 +31,7 @@ type WebhookPub struct {
 	token          []string
 	log            *logrus.Entry
 	hooks          int
+	client         []*http.Client
 }
 
 // gets the configuration for the publisher
@@ -38,6 +40,7 @@ func (pub *WebhookPub) Init(c *Config, log *logrus.Entry) {
 	pub.log = log
 	pub.uri = make([]string, hooks)
 	pub.token = make([]string, hooks)
+	pub.client = make([]*http.Client, hooks)
 
 	// loads the configuration for the registered web hooks
 	for i := 0; i < len(c.Publishers.Webhook); i++ {
@@ -56,6 +59,13 @@ func (pub *WebhookPub) Init(c *Config, log *logrus.Entry) {
 		} else {
 			pub.token[i] = ""
 		}
+		pub.client[i] = &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					InsecureSkipVerify: c.Publishers.Webhook[i].InsecureSkipVerify,
+				},
+			},
+		}
 	}
 }
 
@@ -68,7 +78,7 @@ func (pub *WebhookPub) Publish(event Event) {
 		return
 	}
 	for i := 0; i < len(pub.uri); i++ {
-		err := pub.post(pub.uri[i], pub.token[i], event)
+		err := pub.post(pub.client[i], pub.uri[i], pub.token[i], event)
 		if err != nil {
 			pub.log.Errorf("Failed to post %s %s for %s: %s.",
 				event.Change.Kind,
@@ -86,7 +96,7 @@ func (pub *WebhookPub) Publish(event Event) {
 }
 
 // Make a POST to the webhook
-func (pub *WebhookPub) post(uri string, token string, object Event) error {
+func (pub *WebhookPub) post(client *http.Client, uri string, token string, object Event) error {
 	// if the uri is empty omitting post
 	if uri == "" {
 		return errors.New("post to duplicate URI omitted, check Webhook configuration for duplicate URI values")
@@ -116,7 +126,7 @@ func (pub *WebhookPub) post(uri string, token string, object Event) error {
 	}
 
 	// submits the request
-	response, err := http.DefaultClient.Do(req)
+	response, err := client.Do(req)
 
 	// if the response contains an error then returns
 	if err != nil {

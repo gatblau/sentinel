@@ -20,7 +20,7 @@ KubeConfig = ".kube/config"
 LogLevel = "Trace"
 # the platform the sentinel is observing.
 # update the value below with an identifier for the target platform.
-Platform = "kube-01"
+Platform = "platform-id-here"
 
 [Publishers]
     # defines which publisher to use (i.e. webhook, broker, logger)
@@ -37,13 +37,15 @@ Platform = "kube-01"
     # repeat the block below if you need to add more than one hook
     [[Publishers.Webhook]]
         # the uri of the webhook
-        URI = "http://localhost:8000/webhook"
+        URI = "https://myhost/webhook"
         # authentication mode to use (i.e. none, basic)
         Authentication = "basic"
         # the optional username for basic authentication
-        Username = "admin"
+        Username = "sentinel"
         # the optional password for basic authentication
-        Password = "0n1x"
+        Password = "password_here"
+        # skip verification of TLS certificate
+        InsecureSkipVerify = true
 
     # message broker publisher configuration
     [Publishers.Broker]

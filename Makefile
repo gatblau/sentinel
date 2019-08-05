@@ -39,17 +39,27 @@ build:
 version:
 	sh version.sh $(APP_VER)
 
-# build the Sentinel container image
+# build the Sentinel container image for a snapshot
 image:
 	$(MAKE) version
 	docker build -t $(REPO_NAME)/$(BINARY_NAME)-snapshot:$(shell cat ./version) .
 	docker tag $(REPO_NAME)/$(BINARY_NAME)-snapshot:$(shell cat ./version) $(REPO_NAME)/$(BINARY_NAME)-snapshot:latest
 
-# push the Sentinel container image to the registry
+# build the Sentinel container image for a release
+release-image:
+	docker build -t $(REPO_NAME)/$(BINARY_NAME):$(APP_VER) .
+	docker tag $(REPO_NAME)/$(BINARY_NAME):$(APP_VER) $(REPO_NAME)/$(BINARY_NAME):latest
+
+# push the Sentinel container image to the snapshot registry
 push:
 	docker push $(REPO_NAME)/$(BINARY_NAME)-snapshot:$(shell cat ./version)
 	docker push $(REPO_NAME)/$(BINARY_NAME)-snapshot:latest
 	rm ./version
+
+# push the Sentinel container image to the release registry
+release-push:
+	docker push $(REPO_NAME)/$(BINARY_NAME):$(APP_VER)
+	docker push $(REPO_NAME)/$(BINARY_NAME):latest
 
 # deletes dangling images
 clean:
