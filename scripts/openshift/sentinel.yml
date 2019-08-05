@@ -55,14 +55,14 @@ parameters:
       - i.e. none, basic
     required: false
   - name: WEBHOOK_USER
-    value: "admin"
+    value: "sentinel"
     displayName: Web Hook Username
     description: >-
       The username used for basic authentication of the webhook to which Sentinel publishes events.
       Required if WEBHOOK_AUTHENTICATION is set to basic.
     required: false
   - name: WEBHOOK_PWD
-    value: "0n1x"
+    value: "change-me"
     displayName: Web Hook Password
     description: >-
       The password used for basic authentication of the webhook to which Sentinel publishes events.
@@ -108,6 +108,8 @@ objects:
                   value: stdout
                 - name: SL_PUBLISHERS_WEBHOOK_0_URI
                   value: "${WEBHOOK_URI}"
+                - name: SL_PUBLISHERS_WEBHOOK_0_INSECURESKIPVERIFY
+                  value: "true"
                 - name: SL_PUBLISHERS_WEBHOOK_0_AUTHENTICATION
                   value: "${WEBHOOK_AUTHENTICATION}"
                 - name: SL_PUBLISHERS_WEBHOOK_0_USERNAME
