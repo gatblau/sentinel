@@ -137,7 +137,6 @@ func (pub *WebhookPub) post(client *http.Client, uri string, token string, objec
 	}
 	// if the response has an error then returns
 	if response.StatusCode >= 300 {
-
 		return errors.New(fmt.Sprintf("Request to URI %s failed with status: '%s'. Response body: '%s'. Request payload: '%s'", uri, response.Status, pub.toByteArray(response.Body), pub.toByteArray(req.Body)))
 	} else {
 		pub.log.Tracef("Payload '%s' posted to uri '%s' with status '%s'", payload, uri, response.Status)
