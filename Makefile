@@ -13,7 +13,7 @@
 #    to be licensed under the same terms as the rest of the code.
 #
 # the name of the container registry repository
-REPO_NAME=gatblau
+REPO_NAME=quay.io/gatblau
 
 # the name of the Sentinel binary file
 BINARY_NAME=sentinel
