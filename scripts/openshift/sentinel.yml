@@ -166,7 +166,7 @@ objects:
         - annotations:
           from:
             kind: DockerImage
-            name: gatblau/sentinel-snapshot
+            name: quay.io/gatblau/sentinel-snapshot
           importPolicy:
             scheduled: true
           name: latest
