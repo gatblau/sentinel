@@ -28,7 +28,9 @@ Once the template is imported in OpenShift, it shows in the catalogue and can be
 
 ### **PLEASE NOTE!**
 
-The provided template deploys Sentinel using the **stdout** logger by default. The sdtout publisher is only used for testing the Sentinel without really publishing events but writing them out to the logs.
+The provided template deploys Sentinel using the **stdout** option of the logger publisher by default.
+
+The logger publisher is only used for testing Sentinel without really publishing events but writing them out to the logs - or alternatively to the file system if Sentinel is running outside of Kubernetes.
 
 To publish events to downstream systems *a different logger must be used*. This can be done by modifying the required environment variables for the selected publisher when running the template from the web console.
 
