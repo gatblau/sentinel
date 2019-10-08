@@ -13,7 +13,7 @@
 #    to be licensed under the same terms as the rest of the code.
 #
 # the name of the container registry repository
-REPO_NAME=quay.io/gatblau
+REPO_NAME=gatblau
 
 # the name of the Sentinel binary file
 BINARY_NAME=sentinel
@@ -41,24 +41,11 @@ set-version:
 
 # build the Sentinel container image for a snapshot
 snapshot-image:
-	docker build -t $(REPO_NAME)/$(BINARY_NAME)-snapshot:$(shell cat ./version) .
-	docker tag $(REPO_NAME)/$(BINARY_NAME)-snapshot:$(shell cat ./version) $(REPO_NAME)/$(BINARY_NAME)-snapshot:latest
+	sudo bash build.sh $(REPO_NAME) $(BINARY_NAME) $(shell cat ./version) yes
 
 # build the Sentinel container image for a release
 release-image:
-	docker build -t $(REPO_NAME)/$(BINARY_NAME):$(APP_VER) .
-	docker tag $(REPO_NAME)/$(BINARY_NAME):$(APP_VER) $(REPO_NAME)/$(BINARY_NAME):latest
-
-# push the Sentinel container image to the snapshot registry
-snapshot-push:
-	docker push $(REPO_NAME)/$(BINARY_NAME)-snapshot:$(shell cat ./version)
-	docker push $(REPO_NAME)/$(BINARY_NAME)-snapshot:latest
-	rm ./version
-
-# push the Sentinel container image to the release registry
-release-push:
-	docker push $(REPO_NAME)/$(BINARY_NAME):$(APP_VER)
-	docker push $(REPO_NAME)/$(BINARY_NAME):latest
+	sudo bash build.sh $(REPO_NAME) $(BINARY_NAME) $(shell cat ./version) no
 
 # deletes dangling images
 clean:
