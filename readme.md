@@ -1,4 +1,4 @@
-<img src="./pics/sentinel_small.png" align="right" height="200" width="200"/>
+<img src="docs/pics/sentinel_small.png" align="right" height="200" width="200"/>
 
 ***NOTE! This project has now been integrated with the Onix project and is part of its Kubernetes Bundle.
 Please [go here](https://gatblau.org/onix/blob/develop/k8s/sentinel/readme.md) for the new Sentinel project.***
