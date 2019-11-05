@@ -1,5 +1,10 @@
 <img src="./pics/sentinel_small.png" align="right" height="200" width="200"/>
 
+***NOTE! This project has now been integrated with the Onix project and is part of its Kubernetes Bundle.
+Please [go here](https://gatblau.org/onix/blob/develop/k8s/sentinel/readme.md) for the new Sentinel project.***
+
+***An explanation of how Sentinel fits in Onix can be found [here](https://gatblau.org/onix/blob/develop/docs/overview.md)***
+
 # Sentinel 
 
 Sentinel is a Go application, which looks for state changes of [kubernetes objects](https://kubernetes.io/docs/concepts/overview/working-with-objects/kubernetes-objects/), and publish their associated metadata to specific endpoints for further processing by downstream systems.
@@ -10,7 +15,7 @@ The application process can either run inside or outside of a [Kubernetes](https
 
 The following image shows how the application works:
 
-![sentinel system architecture](./pics/arc.png)
+![sentinel system architecture](docs/pics/arc.png)
 
 ## Topics
 

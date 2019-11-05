@@ -32,6 +32,6 @@ An example of how to get started with Kafka can be seen [here](./getting_started
 
 The following example shows a configuration where events are published from three Kubernetes clusters into Kafka:
 
-![multi cluster publishing](./../pics/kafka.png)
+![multi cluster publishing](pics/kafka.png)
 
 [*] _The Sentinel icon was made by [Freepik](https://www.freepik.com) from [Flaticon](https://www.flaticon.com) and is licensed by [Creative Commons BY 3.0](http://creativecommons.org/licenses/by/3.0)_
