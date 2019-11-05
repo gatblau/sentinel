@@ -27,9 +27,6 @@ APP_VER = v0.0.3
 # the name of the folder where the packaged binaries will be placed after the build
 BUILD_FOLDER=build
 
-# get old images that are left without a name from new image builds (i.e. dangling images)
-DANGLING_IMS = $(shell docker images -f dangling=true -q)
-
 # build the Sentinel binary in the current platform
 build:
 	$(GO_CMD) fmt
@@ -39,17 +36,27 @@ build:
 set-version:
 	sh version.sh $(APP_VER)
 
-# build the Sentinel container image for a snapshot
-snapshot-image:
-	sudo bash build.sh $(REPO_NAME) $(BINARY_NAME) $(shell cat ./version) yes
+# build the Sentinel images as release or snapshot, for both docker.io and quay.io
+# make image snapshot=yes fmt=docker|oci reg=docker.io|quay.io
+# make image snapshot=no fmt=docker|oci reg=docker.io|quay.io
+image:
+	sudo bash build.sh $(REPO_NAME) $(BINARY_NAME) $(shell cat ./version) $(snapshot) $(fmt) $(reg)
 
-# build the Sentinel container image for a release
-release-image:
-	sudo bash build.sh $(REPO_NAME) $(BINARY_NAME) $(shell cat ./version) no
+# push snapshot to specified registry as follows:
+#   make snapshot-push registry=docker.io
+#   make snapshot-push registry=quay.io
+snapshot-push:
+	sudo podman login $(registry) -u gatblau
+	sudo podman push $(registry)/$(REPO_NAME)/$(BINARY_NAME)-snapshot:$(shell cat ./version)
+	sudo podman push $(registry)/$(REPO_NAME)/$(BINARY_NAME)-snapshot:latest
 
-# deletes dangling images
-clean:
-	docker rmi $(DANGLING_IMS)
+# push release to specified registry as follows:
+#   make release-push registry=docker.io
+#   make release-push registry=quay.io
+release-push:
+	sudo podman login $(registry) -u gatblau
+	sudo podman push $(registry)/$(REPO_NAME)/$(BINARY_NAME):$(shell cat ./version)
+	sudo podman push $(registry)/$(REPO_NAME)/$(BINARY_NAME):latest
 
 # package the Sentinel binary for all platforms
 package:

@@ -18,11 +18,11 @@
 # Run in CentOS 8 / RHEL 8
 #
 # NOTE:
-#  if running on a buildah version lower than 1.11.3, the run with sudo e.g. sudo bash build.sh $1 $2 $3 $4
+#  if running on a buildah version lower than 1.11.3, the run with sudo e.g. sudo bash build.sh $1 $2 $3 $4 $5 $6
 #   https://cbs.centos.org/koji/rpminfo?rpmID=171623
 #
 # check the input variables
-if [ $# -lt 4 ]; then
+if [ $# -lt 6 ]; then
     echo "Parameters provided are not correct. See usage below."
     echo "Usage is: sh build.sh [REPO_NAME] [APP_NAME] [APP_VERSION] [SNAPSHOT] - e.g. sh build.sh gatblau sentinel v0.0.1 yes"
     exit 1
@@ -33,6 +33,8 @@ REPO_NAME=$1
 APP_NAME=$2
 APP_VERSION=$3
 SNAPSHOT=$4
+IMG_FMT=$5 # image format i.e. docker or oci
+IMG_REG=$6 # image registry i.e. docker.io or quay.io
 
 # if building snapshot images, append snapshot to the end of the APP_NAME
 if [ $SNAPSHOT == "yes" ]; then
@@ -88,15 +90,11 @@ buildah config --user 20 $sentinel
 buildah config --cmd "./sentinel" $sentinel
 
 # commit the Sentinel working container to an image in the local registry
-buildah commit --format oci $sentinel $REPO_NAME/$APP_NAME:$APP_VERSION
+buildah commit --format $IMG_FMT $sentinel $REPO_NAME/$APP_NAME:$APP_VERSION
 
-# tag the local image for docker.io
-buildah tag $REPO_NAME/$APP_NAME:$APP_VERSION docker.io/$REPO_NAME/$APP_NAME:$APP_VERSION
-buildah tag $REPO_NAME/$APP_NAME:$APP_VERSION docker.io/$REPO_NAME/$APP_NAME:latest
-
-# tag the local image for quay.io
-buildah tag $REPO_NAME/$APP_NAME:$APP_VERSION quay.io/$REPO_NAME/$APP_NAME:$APP_VERSION
-buildah tag $REPO_NAME/$APP_NAME:$APP_VERSION quay.io/$REPO_NAME/$APP_NAME:latest
+# tag the local image for the registry specified (i.e. docker.io or quay.io)
+buildah tag $REPO_NAME/$APP_NAME:$APP_VERSION $IMG_REG/$REPO_NAME/$APP_NAME:$APP_VERSION
+buildah tag $REPO_NAME/$APP_NAME:$APP_VERSION $IMG_REG/$REPO_NAME/$APP_NAME:latest
 
 # remove the working containers
 buildah rm $builder
